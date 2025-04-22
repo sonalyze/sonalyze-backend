@@ -17,4 +17,3 @@ app.add_middleware(
 )
 
 app.include_router(api_router.router, prefix="/api", tags=["api"])
-

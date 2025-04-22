@@ -10,7 +10,7 @@ REST api for the audio-analyses-app. Written in python. Only for generic, persis
 -   [mypy](https://mypy.readthedocs.io/en/latest/) for static typing
 -   [uv](https://docs.astral.sh/uv/) for managing installs, dependency management and virtual envs
 -   [docker](https://www.docker.com/) for containering and production deployment
--   [unittest](https://docs.python.org/3/library/unittest.html) for unit testing
+-   [pytest](https://docs.pytest.org/en/stable/#) for unit testing
 
 ---
 
@@ -49,7 +49,18 @@ uv run fastapi dev src/main.py
 
 ## Project Structure
 
-**TODO**
+```bash
+src/
+  api/              # Api router, models, endpoints
+    endpoints/      # Api endpoints without business logic
+    models/         # Outward facing api models
+    router.py       # Router configuration
+  database/         # DB access code and models
+  models/           # Internal models / DTOs
+  services/         # Business logic
+  tests/            # Pytest unit tests
+  main.py           # Entry point
+```
 
 ---
 
@@ -65,6 +76,12 @@ Checking types:
 
 ```shell
 uv run mypy . --strict
+```
+
+Run unit tests:
+
+```shell
+uv run pytest
 ```
 
 ---

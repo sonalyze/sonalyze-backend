@@ -12,7 +12,9 @@ router.include_router(rooms.router, prefix="/rooms", tags=["root"])
 @router.get("/", tags=["root"])
 async def read_root() -> dict[str, str]:
     logger.warning("Root endpoint accessed")
-    return {"message": "welcome to aal"}
+    asd = "asd"
+    asd = 5
+    return {"message": "welcome to aal :)"}
 
 @router.get("/health", tags=["health"])
 async def health_check() -> dict[str, str]:

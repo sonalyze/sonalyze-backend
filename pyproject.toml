@@ -8,4 +8,7 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "mypy>=1.15.0",
     "pytest>=8.3.5",
+    "python-socketio[asgi]>=5.13.0",
 ]
+[tool.mypy]
+disable_error_code = ["import-untyped"]

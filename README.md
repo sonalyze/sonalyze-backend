@@ -11,6 +11,7 @@ REST api for the audio-analyses-app. Written in python. Only for generic, persis
 -   [uv](https://docs.astral.sh/uv/) for managing installs, dependency management and virtual envs
 -   [docker](https://www.docker.com/) for containering and production deployment
 -   [pytest](https://docs.pytest.org/en/stable/#) for unit testing
+-   [python-socketio](https://python-socketio.readthedocs.io/en/latest/index.html) for bidirectional realtime messaging
 
 ---
 
@@ -58,6 +59,7 @@ src/
   database/         # DB access code and models
   models/           # Internal models / DTOs
   services/         # Business logic
+  sio/              # Socket.io logic and events
   tests/            # Pytest unit tests
   main.py           # Entry point
 ```

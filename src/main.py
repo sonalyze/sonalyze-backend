@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from api import router as api_router
 from fastapi.middleware.cors import CORSMiddleware
+from sio import sio_app
 
 app = FastAPI()
 
@@ -15,5 +16,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/socket.io", sio_app)
 
 app.include_router(api_router.router, prefix="/api", tags=["api"])

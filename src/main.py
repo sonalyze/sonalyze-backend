@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from api import router as api_router
 from fastapi.middleware.cors import CORSMiddleware
-from sio import sio_app
+from sio.socketio_server import sio_app
 
 app = FastAPI()
 

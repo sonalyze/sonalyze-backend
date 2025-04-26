@@ -95,6 +95,10 @@ uv run pytest
 3. Make sure all tests pass and mypy finds no type errors.
 4. Create a PR to `development`
 
+### Branch Naming Conventions:
+
+Branch name should always start with `feature/`, `fix/`, `chore/` or `refactor/`, continued with the content of the branch. For example: `feature/microphone-impl`
+
 ---
 
 ## Required VS Code extensions

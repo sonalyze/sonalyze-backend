@@ -45,6 +45,12 @@ jobs:
             - name: Checkout to the branch
               uses: actions/checkout@v2
 
+            - name: Add secrets
+              run: |
+                  cat <<EOF > .env
+                  DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}
+                  EOF
+
             - name: Azure Login
               uses: azure/login@v2
               with:

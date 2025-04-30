@@ -1,1 +1,1 @@
-from . import rooms
+from . import test

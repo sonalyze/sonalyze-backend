@@ -1,4 +1,4 @@
-from .endpoints import rooms
+from .endpoints import test
 from fastapi import APIRouter
 import logging
 
@@ -7,7 +7,7 @@ logger = logging.getLogger("uvicorn.info")
 
 router = APIRouter()
 
-router.include_router(rooms.router, prefix="/rooms", tags=["root"])
+router.include_router(test.router, prefix="/test", tags=["test"])
 
 @router.get("/", tags=["root"])
 async def read_root() -> dict[str, str]:

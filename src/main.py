@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from api import router as api_router
 from fastapi.middleware.cors import CORSMiddleware
 from sio.socketio_server import sio_app
+from dotenv import load_dotenv
 
+load_dotenv()
 app = FastAPI()
 
 origins = [

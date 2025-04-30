@@ -12,6 +12,8 @@ REST api for the audio-analyses-app. Written in python. Only for generic, persis
 -   [docker](https://www.docker.com/) for containering and production deployment
 -   [pytest](https://docs.pytest.org/en/stable/#) for unit testing
 -   [python-socketio](https://python-socketio.readthedocs.io/en/latest/index.html) for bidirectional realtime messaging
+-   [python-dotenv](https://pypi.org/project/python-dotenv/) for management of env vars
+-   [sqlmodel](https://sqlmodel.tiangolo.com/tutorial/) for sql connection
 
 ---
 
@@ -57,6 +59,7 @@ src/
     models/         # Outward facing api models
     router.py       # Router configuration
   database/         # DB access code and models
+    models/         # DB ORM models
   models/           # Internal models / DTOs
   services/         # Business logic
   sio/              # Socket.io logic and events

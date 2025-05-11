@@ -1,4 +1,4 @@
-from .endpoints import test, room_routes, measurement_routes
+from .endpoints import room_routes, measurement_routes
 from fastapi import APIRouter
 import logging
 
@@ -6,7 +6,6 @@ logger = logging.getLogger("uvicorn.info")
 
 router = APIRouter()
 
-router.include_router(test.router, prefix="/test", tags=["test"])
 router.include_router(room_routes.router, prefix="/room", tags=["room"])
 router.include_router(measurement_routes.router, prefix="/measurements", tags=["measurements"])
 

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import select, Session
-from database import get_session
+
+from database.engine import get_session
 from database.schemas import Test
 
 router = APIRouter()

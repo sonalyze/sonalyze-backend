@@ -46,6 +46,9 @@ uv sync
 
 ```shell
 uv run fastapi dev src/main.py
+
+# Ubuntu?
+PYTHONPATH=src uv run uvicorn src.main:app --reload
 ```
 
 ---

@@ -1,4 +1,4 @@
-from .endpoints import test
+from .endpoints import test, impulse_response
 from fastapi import APIRouter
 import logging
 
@@ -8,6 +8,7 @@ logger = logging.getLogger("uvicorn.info")
 router = APIRouter()
 
 router.include_router(test.router, prefix="/test", tags=["test"])
+router.include_router(impulse_response.router, prefix="", tags=["audio"])
 
 @router.get("/", tags=["root"])
 async def read_root() -> dict[str, str]:

@@ -8,8 +8,11 @@ load_dotenv()
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",
-    "https://aal.todo",
+    "http://localhost:8081",        # ✅ dein echtes Frontend
+    "http://127.0.0.1:8081",        # ✅ alternative Adresse
+    "http://localhost:3000",        # optional
+    "http://127.0.0.1:3000",        # optional
+    "https://aal.todo",             # optional
 ]
 app.add_middleware(
     CORSMiddleware,

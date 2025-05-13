@@ -21,4 +21,4 @@ app.add_middleware(
 
 app.mount("/socket.io", sio_app)
 
-app.include_router(api_router.router, prefix="/api", tags=["api"])
+app.include_router(api_router.router, prefix="/api")

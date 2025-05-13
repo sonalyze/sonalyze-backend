@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi.params import Depends
 
-from api.models.measurement import Measurement
+from models.measurement import Measurement
 from api.models.post_models import GetIds
 from services.auth_service import get_token_header
 

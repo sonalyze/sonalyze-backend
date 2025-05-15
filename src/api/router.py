@@ -1,4 +1,4 @@
-from .endpoints import test, impulse_response
+from src.api.endpoints import test, impulse_response, calibration
 from fastapi import APIRouter
 import logging
 
@@ -9,6 +9,7 @@ router = APIRouter()
 
 router.include_router(test.router, prefix="/test", tags=["test"])
 router.include_router(impulse_response.router, prefix="", tags=["audio"])
+router.include_router(calibration.router, tags=["calibration"])
 
 @router.get("/", tags=["root"])
 async def read_root() -> dict[str, str]:

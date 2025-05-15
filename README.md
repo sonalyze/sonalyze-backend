@@ -47,8 +47,9 @@ uv sync
 ```shell
 uv run fastapi dev src/main.py
 
-# Ubuntu?
-PYTHONPATH=src uv run uvicorn src.main:app --reload
+# PYTHONPATH=src uv run uvicorn src.main:app --reload
+# PYTHONPATH=src uv run python -m uvicorn src.main:app --reload
+
 ```
 
 ---
@@ -111,3 +112,7 @@ Branch name should always start with `feature/`, `fix/`, `chore/` or `refactor/`
 
 -   https://marketplace.visualstudio.com/items/?itemName=ms-python.python
 -   https://marketplace.visualstudio.com/items/?itemName=ms-python.mypy-type-checker
+
+
+## FastAPI - Swagger UI
+http://127.0.0.1:8000/docs

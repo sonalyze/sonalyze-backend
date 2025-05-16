@@ -4,6 +4,8 @@ from typing import List
 import numpy as np
 
 from src.services.calibration_utils import calculate_latency
+from src.services.calibration_utils import calculate_latency_with_correlation
+
 
 router = APIRouter()
 
@@ -17,4 +19,11 @@ async def latency_endpoint(data: CalibrationPayload):
     original = np.array(data.original, dtype=np.float32)
     recorded = np.array(data.recorded, dtype=np.float32)
     result = calculate_latency(original, recorded, data.sampleRate)
+    return result
+
+@router.post("/calibration/correlation")
+async def correlation_endpoint(data: CalibrationPayload):
+    original = np.array(data.original, dtype=np.float32)
+    recorded = np.array(data.recorded, dtype=np.float32)
+    result = calculate_latency_with_correlation(original, recorded, data.sampleRate)
     return result

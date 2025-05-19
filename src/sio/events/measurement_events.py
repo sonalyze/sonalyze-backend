@@ -8,7 +8,7 @@ def register_measurement_events(sio: AsyncServer) -> None:
         pass
 
     class SendRecordEventData(BaseModel):
-        recording: bytearray
+        recording: str
 
     @sio.event # type: ignore
     def send_record_data(sid: str, data: SendRecordEventData) -> None:

@@ -1,3 +1,7 @@
+from fastapi.params import Depends
+
+from database.engine import DataContext, get_db
+from database.schemas.room_db import RoomDbModel
 from .endpoints import room_routes, measurement_routes
 from fastapi import APIRouter
 import logging
@@ -18,3 +22,8 @@ async def read_root() -> dict[str, str]:
 @router.get("/health", tags=["health"])
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+@router.get("/test", response_model=RoomDbModel,tags=["test"])
+async def test(repo: DataContext = Depends(get_db)) -> RoomDbModel:
+    res = await repo.rooms.find_one_by({})
+    return res

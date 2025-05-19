@@ -7,7 +7,7 @@ from fastapi.params import Depends
 
 from api.models.post_models import UpdateRoom, CreateRoom, GetIds, UpdateScene
 from api.models.room import Room
-from api.models.room_scene import RoomScene
+from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
 from models import AcousticParameters
 from services.auth_service import get_token_header
@@ -31,7 +31,7 @@ async def update_room(room_id: str, body: UpdateRoom, token: Depends = Depends(g
     return None
 
 @router.get("/{room_id}/scene", tags=["scene"])
-async def get_room_scene(room_id: str) -> RoomScene | None:
+async def get_room_scene(room_id: str) -> RestRoomScene | None:
     return None
 
 @router.put("/{room_id}/scene", tags=["scene"])

@@ -1,4 +1,4 @@
 from .acoustic_parameters import AcousticParameters
-from .measurement import Measurement
+from api.models.measurement import RestMeasurement
 
-__all__ = ["AcousticParameters",  "Measurement"]
+__all__ = ["AcousticParameters", "RestMeasurement"]

@@ -3,7 +3,7 @@ from typing import List
 
 from models import AcousticParameters
 
-class Measurement(BaseModel):
+class RestMeasurement(BaseModel):
     id: str = Field(..., title="Measurement ID", description="Unique identifier for the measurement")
     name: str = Field(..., title="Measurement name", description="Name of the measurement")
     createdAt: str = Field(..., title="Created at", description="Timestamp when the measurement was created")

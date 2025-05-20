@@ -11,8 +11,8 @@ from database.schemas.user_db import UserRepository
 
 
 class DataContext:
-    def __init__(self, client: AsyncMongoClient):
-        database = client.test_database
+    def __init__(self, mongo_client: AsyncMongoClient): # type: ignore[type-arg]
+        database = mongo_client.test_database
         self.rooms = RoomRepository(database)
         self.measurements = MeasurementRepository(database)
         self.users = UserRepository(database)
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 connection_string = dotenv_values(".env")["DB_CONNECTION_STRING"] or ""
 
 uri = f"mongodb://{connection_string}"
-client = AsyncMongoClient(uri)
+client: AsyncMongoClient = AsyncMongoClient(uri) # type: ignore[type-arg]
 data_context = DataContext(client)
 
 

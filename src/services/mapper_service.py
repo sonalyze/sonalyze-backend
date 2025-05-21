@@ -19,8 +19,7 @@ def map_room_db_to_room(room_db: RoomDbModel, token: str) -> Room:
         name=room_db.name,
         isOwner=(room_db.ownerToken == token),
         hasSimulation=(room_db.simulation is not None),
-        # @TODO add timestamp
-        lastUpdatedAt=room_db.updated_at.isoformat() if hasattr(room_db, 'updated_at') else '123'
+        lastUpdatedAt=room_db.updated_at.isoformat()
     )
 
 
@@ -78,6 +77,6 @@ def map_measurement_db_to_rest_measurement(measurement_db: MeasurementDbModel, t
         id=str(measurement_db.id),
         isOwner=True if measurement_db.ownerToken == token else False,
         values=measurement_db.values,
-        createdAt="123",
+        createdAt=measurement_db.created_at.isoformat(),
         name=measurement_db.name
     )

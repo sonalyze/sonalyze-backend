@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException
@@ -65,5 +66,6 @@ async def migrate_user(
             measurement_db.ownerToken = body.token
         await data_context.measurements.save(measurement_db)
 
+    new_user.updated_at = datetime.now()
     await data_context.users.save(new_user)
     await data_context.users.delete(old_user)

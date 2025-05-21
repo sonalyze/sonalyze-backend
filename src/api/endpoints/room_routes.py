@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException
@@ -95,6 +96,7 @@ async def update_room(
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     room_db.name = body.name
+    room_db.updated_at = datetime.now()
     await data_context.rooms.save(room_db)
 
 @router.get("/{room_id}/scene", response_model=RestRoomScene, tags=["scene"])
@@ -129,6 +131,7 @@ async def update_room_scene(
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     room_db = map_update_scene_to_room_db(room_db, scene)
+    room_db.updated_at = datetime.now()
     await data_context.rooms.save(room_db)
 
 @router.get("/{room_id}/simulation/result", response_model=Simulation, tags=["simulation"])

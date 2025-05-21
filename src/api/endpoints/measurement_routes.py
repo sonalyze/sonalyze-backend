@@ -12,8 +12,13 @@ from services.mapper_service import map_measurement_db_to_rest_measurement
 router = APIRouter()
 
 @router.get("/", response_model=List[RestMeasurement], tags=["measurements"])
-async def get_measurements(token: Annotated[str, Depends(get_token_header)],
-                           data_context: Annotated[DataContext, Depends(get_db)]) -> List[RestMeasurement]:
+async def get_measurements(
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> List[RestMeasurement]:
+    """
+    Get all measurements for the calling user.
+    """
     user = await data_context.users.find_one_by_id(ObjectId(token))
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -26,8 +31,14 @@ async def get_measurements(token: Annotated[str, Depends(get_token_header)],
     return measurements
 
 @router.delete("/{id}", tags=["measurements"])
-async def delete_measurement(measurement_id: str, token: Annotated[str, Depends(get_token_header)],
-                             data_context: Annotated[DataContext, Depends(get_db)]) -> None:
+async def delete_measurement(
+        measurement_id: str,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> None:
+    """
+    Delete a measurement owned by the calling user.
+    """
     measurement = await data_context.measurements.find_one_by_id(ObjectId(measurement_id))
     if not measurement:
         raise HTTPException(status_code=404, detail="Measurement not found")

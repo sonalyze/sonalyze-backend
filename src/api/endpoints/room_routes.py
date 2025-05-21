@@ -21,7 +21,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/", response_model=List[Room], tags=["room"])
-async def get_rooms(token: Annotated[str, Depends(get_token_header)], data_context: Annotated[DataContext, Depends(get_db)]) -> List[Room]:
+async def get_rooms(
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> List[Room]:
+    """
+    Get general info about all rooms of the calling user.
+    """
     user = await data_context.users.find_one_by_id(ObjectId(token))
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -35,8 +41,14 @@ async def get_rooms(token: Annotated[str, Depends(get_token_header)], data_conte
     return list(rooms) if rooms else []
 
 @router.delete("/{room_id}", tags=["room"])
-async def delete_room(room_id: str, token: Annotated[str, Depends(get_token_header)],
-                      data_context: Annotated[DataContext, Depends(get_db)]) -> None:
+async def delete_room(
+        room_id: str,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> None:
+    """
+    Delete a room owned by the calling user.
+    """
     room = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -45,18 +57,37 @@ async def delete_room(room_id: str, token: Annotated[str, Depends(get_token_head
     await data_context.rooms.delete_by_id(room.id)
 
 @router.post("/", tags=["room"])
-async def create_room(body: CreateRoom, token: Annotated[str, Depends(get_token_header)],
-                      data_context: Annotated[DataContext, Depends(get_db)]) -> Room | None:
+async def create_room(
+        body: CreateRoom,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> Room | None:
+    """
+    Create a new room with a scene.
+    """
     room_db: RoomDbModel = RoomDbModel(name=body.name,
                                        ownerToken=token,
                                        room=body.scene)
     await data_context.rooms.save(room_db)
+    user = await data_context.users.find_one_by_id(ObjectId(token))
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    user.rooms.append(str(room_db.id))
+    await data_context.users.save(user)
 
     return map_room_db_to_room(room_db, token)
 
 @router.put("/{room_id}", tags=["room"])
-async def update_room(room_id: str, body: UpdateRoom, token: Annotated[str, Depends(get_token_header)],
-                      data_context: Annotated[DataContext, Depends(get_db)]) -> None:
+async def update_room(
+        room_id: str,
+        body: UpdateRoom,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> None:
+    """
+    Update the general info of a room.
+    Requires ownership of the room.
+    """
     room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room_db:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -67,7 +98,13 @@ async def update_room(room_id: str, body: UpdateRoom, token: Annotated[str, Depe
     await data_context.rooms.save(room_db)
 
 @router.get("/{room_id}/scene", response_model=RestRoomScene, tags=["scene"])
-async def get_room_scene(room_id: str, data_context: Annotated[DataContext, Depends(get_db)]) -> RestRoomScene | None:
+async def get_room_scene(
+        room_id: str,
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> RestRoomScene | None:
+    """
+    Get the 3D-Scene of the given room.
+    """
     room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room_db or not room_db.room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -75,8 +112,16 @@ async def get_room_scene(room_id: str, data_context: Annotated[DataContext, Depe
     return map_room_db_to_rest_room_scene(room_db)
 
 @router.put("/{room_id}/scene", tags=["scene"])
-async def update_room_scene(room_id: str, scene: UpdateScene, token: Annotated[str, Depends(get_token_header)],
-                            data_context: Annotated[DataContext, Depends(get_db)]) -> None:
+async def update_room_scene(
+        room_id: str,
+        scene: UpdateScene,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> None:
+    """
+    Update the 3D-Scene of the given room.
+    Requires ownership of the room.
+    """
     room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room_db or not room_db.room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -87,7 +132,13 @@ async def update_room_scene(room_id: str, scene: UpdateScene, token: Annotated[s
     await data_context.rooms.save(room_db)
 
 @router.get("/{room_id}/simulation/result", response_model=Simulation, tags=["simulation"])
-async def get_simulation_result(room_id: str,  data_context: Annotated[DataContext, Depends(get_db)]) -> Simulation | None:
+async def get_simulation_result(
+        room_id: str,
+        data_context: Annotated[DataContext, Depends(get_db)]
+) -> Simulation | None:
+    """
+    Get the existing simulation result of a room.
+    """
     room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room_db or not room_db.simulation:
         raise HTTPException(status_code=404, detail="Room not found")

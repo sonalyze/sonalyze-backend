@@ -7,7 +7,7 @@ from models import AcousticParameters
 class UserDbModel(BaseModel):
     id: Optional[PydanticObjectId] = None
     rooms: List[str] = []
-    measurements: List[List[AcousticParameters]] = []
+    measurements: List[str] = []
 
 class UserRepository(AsyncAbstractRepository[UserDbModel]):
     class Meta:

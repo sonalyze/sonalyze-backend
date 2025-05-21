@@ -9,7 +9,7 @@ class RoomDbModel(BaseModel):
     id: Optional[PydanticObjectId] = None
     name: str
     ownerToken: str
-    room: Optional[RoomScene] = None
+    room: RoomScene
     simulation: Optional[List[List[AcousticParameters]] ] = None
 
 class RoomRepository(AsyncAbstractRepository[RoomDbModel]):

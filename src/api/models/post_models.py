@@ -12,3 +12,6 @@ class UpdateRoom(BaseModel):
 
 class UpdateScene(BaseModel):
     scene: RestRoomScene = Field(..., title="Room scene", description="Updated scene")
+
+class PostUserIds(BaseModel):
+    token: str = Field(..., title="User token", description="User token")

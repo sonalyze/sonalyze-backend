@@ -13,6 +13,8 @@ from api.models.simulation import Simulation
 from database.engine import DataContext, get_db
 from database.schemas.room_db import RoomDbModel
 from services.auth_service import get_token_header
+from services.mapper_service import map_room_db_to_room, map_room_db_to_rest_room_scene, map_update_scene_to_room_db, \
+    map_room_db_to_simulation
 
 logger = logging.getLogger(__name__)
 
@@ -28,17 +30,13 @@ async def get_rooms(token: Annotated[str, Depends(get_token_header)], data_conte
     rooms_db = await data_context.rooms.find_by({'_id': {'$in': room_ids}})
     rooms: List[Room] = []
     for room_db in rooms_db:
-        room = Room(id=str(room_db.id),
-                    name=room_db.name,
-                    isOwner=True if room_db.ownerToken == token else False,
-                    hasSimulation=False if room_db.simulation is None else True,
-                    lastUpdatedAt="123")
-        rooms.append(room)
+        rooms.append(map_room_db_to_room(room_db, token))
 
     return list(rooms) if rooms else []
 
 @router.delete("/{room_id}", tags=["room"])
-async def delete_room(room_id: str, token: Annotated[str, Depends(get_token_header)], data_context: Annotated[DataContext, Depends(get_db)]) -> None:
+async def delete_room(room_id: str, token: Annotated[str, Depends(get_token_header)],
+                      data_context: Annotated[DataContext, Depends(get_db)]) -> None:
     room = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -47,21 +45,18 @@ async def delete_room(room_id: str, token: Annotated[str, Depends(get_token_head
     await data_context.rooms.delete_by_id(room.id)
 
 @router.post("/", tags=["room"])
-async def create_room(body: CreateRoom, token: Annotated[str, Depends(get_token_header)], data_context: Annotated[DataContext, Depends(get_db)]) -> Room | None:
+async def create_room(body: CreateRoom, token: Annotated[str, Depends(get_token_header)],
+                      data_context: Annotated[DataContext, Depends(get_db)]) -> Room | None:
     room_db: RoomDbModel = RoomDbModel(name=body.name,
                                        ownerToken=token,
                                        room=body.scene)
     await data_context.rooms.save(room_db)
-    room = Room(id=str(room_db.id),
-                name=room_db.name,
-                isOwner=True,
-                hasSimulation=False,
-                lastUpdatedAt="123")
 
-    return room
+    return map_room_db_to_room(room_db, token)
 
 @router.put("/{room_id}", tags=["room"])
-async def update_room(room_id: str, body: UpdateRoom, token: Annotated[str, Depends(get_token_header)], data_context: Annotated[DataContext, Depends(get_db)]) -> None:
+async def update_room(room_id: str, body: UpdateRoom, token: Annotated[str, Depends(get_token_header)],
+                      data_context: Annotated[DataContext, Depends(get_db)]) -> None:
     room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room_db:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -76,27 +71,19 @@ async def get_room_scene(room_id: str, data_context: Annotated[DataContext, Depe
     room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room_db or not room_db.room:
         raise HTTPException(status_code=404, detail="Room not found")
-    scene: RestRoomScene = RestRoomScene(roomId=room_id,
-                                         speakers=room_db.room.speakers,
-                                         furniture=room_db.room.furniture,
-                                         materials=room_db.room.materials,
-                                         dimensions=room_db.room.dimensions,
-                                         microphones=room_db.room.microphones)
-    return scene
+
+    return map_room_db_to_rest_room_scene(room_db)
 
 @router.put("/{room_id}/scene", tags=["scene"])
-async def update_room_scene(room_id: str, scene: UpdateScene, token: Annotated[str, Depends(get_token_header)], data_context: Annotated[DataContext, Depends(get_db)]) -> None:
+async def update_room_scene(room_id: str, scene: UpdateScene, token: Annotated[str, Depends(get_token_header)],
+                            data_context: Annotated[DataContext, Depends(get_db)]) -> None:
     room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
     if not room_db or not room_db.room:
         raise HTTPException(status_code=404, detail="Room not found")
     if not room_db.ownerToken == token:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    room_db.room.speakers = scene.scene.speakers
-    room_db.room.furniture = scene.scene.furniture
-    room_db.room.materials = scene.scene.materials
-    room_db.room.dimensions = scene.scene.dimensions
-    room_db.room.microphones = scene.scene.microphones
+    room_db = map_update_scene_to_room_db(room_db, scene)
     await data_context.rooms.save(room_db)
 
 @router.get("/{room_id}/simulation/result", response_model=Simulation, tags=["simulation"])
@@ -105,12 +92,10 @@ async def get_simulation_result(room_id: str,  data_context: Annotated[DataConte
     if not room_db or not room_db.simulation:
         raise HTTPException(status_code=404, detail="Room not found")
 
-    simulation: Simulation = Simulation(roomId=room_id,
-                                        values=room_db.simulation)
-    return simulation
+    return map_room_db_to_simulation(room_db)
 
 @router.get("/{room_id}/simulation", tags=["simulation"])
-async def do_simulation(room_id: str, token: Annotated[str, Depends(get_token_header)], data_context: Annotated[DataContext, Depends(get_db)]) -> Simulation | None:
-    # @TODO do simulation
+async def do_simulation(room_id: str, token: Annotated[str, Depends(get_token_header)],
+                        data_context: Annotated[DataContext, Depends(get_db)]) -> Simulation | None:
 
     return None

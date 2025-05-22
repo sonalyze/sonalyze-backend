@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 
 from api.models.room_scene import RestRoomScene
-from typing import List
 
 
 class CreateRoom(BaseModel):
@@ -11,8 +10,8 @@ class CreateRoom(BaseModel):
 class UpdateRoom(BaseModel):
     name: str = Field(..., title="Room name", description="Updated name")
 
-class GetIds(BaseModel):
-    ids: List[str] = Field(..., title="Ids", description="Ids to select")
-
 class UpdateScene(BaseModel):
     scene: RestRoomScene = Field(..., title="Room scene", description="Updated scene")
+
+class PostUserIds(BaseModel):
+    token: str = Field(..., title="User token", description="User token")

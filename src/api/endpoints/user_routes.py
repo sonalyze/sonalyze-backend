@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from bson import ObjectId
+from bson.errors import InvalidId
 from fastapi import APIRouter, HTTPException
 from typing import Annotated
 
@@ -23,8 +24,15 @@ async def register_user(
     """
     Registers a new user.
     """
+    user_id: ObjectId
+    try:
+        user_id = ObjectId(body.token)
+    except InvalidId:
+        logger.warning("Invalid user id provided.")
+        raise HTTPException(status_code=400, detail="Bad Request")
+
     user = UserDbModel(
-        id=ObjectId(body.token),
+        id=user_id,
         rooms=[],
         measurements=[]
     )
@@ -44,7 +52,11 @@ async def migrate_user(
     old_user = await data_context.users.find_one_by_id(ObjectId(token))
     if old_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    new_user = await data_context.users.find_one_by_id(ObjectId(body.token))
+    try:
+        new_user = await data_context.users.find_one_by_id(ObjectId(body.token))
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Bad Request")
+
     if new_user is None or old_user is None:
         raise HTTPException(status_code=404, detail="User not found")
 

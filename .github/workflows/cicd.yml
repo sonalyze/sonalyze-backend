@@ -2,8 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches:
-      - test-cicd
+    branches: ["test-cicd"]
 
 jobs:
   build-and-push:

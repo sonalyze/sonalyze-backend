@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.115.12",
+    "library>=3.0.91",
     "mypy>=1.15.0",
     "pydantic-mongo>=3.1.0",
     "pytest>=8.3.5",

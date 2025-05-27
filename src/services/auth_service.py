@@ -27,4 +27,5 @@ async def get_token_header(credentials: Annotated[HTTPAuthorizationCredentials, 
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
+
     return token

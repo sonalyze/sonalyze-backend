@@ -5,3 +5,9 @@ services:
     restart: always
     ports:
       - '10001:8000'
+    networks:
+      - sonalyze-test
+
+networks:
+  sonalyze-test:
+    external: true

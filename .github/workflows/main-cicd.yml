@@ -2,6 +2,8 @@ name: main-cicd.yml
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: [ "main" ]
 
   workflow_dispatch:
 
@@ -28,6 +30,7 @@ jobs:
           uv run pytest --disable-warnings -v --tb=short --maxfail=1
 
   build-and-push:
+    if: ${{github.event_name == 'push'}}
     runs-on: ubuntu-latest
     needs: tests
     permissions:

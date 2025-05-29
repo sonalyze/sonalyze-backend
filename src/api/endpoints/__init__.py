@@ -1,1 +1,1 @@
-from . import test
+from . import measurement_routes, room_routes

@@ -13,7 +13,7 @@ REST api for the audio-analyses-app. Written in python. Only for generic, persis
 -   [pytest](https://docs.pytest.org/en/stable/#) for unit testing
 -   [python-socketio](https://python-socketio.readthedocs.io/en/latest/index.html) for bidirectional realtime messaging
 -   [python-dotenv](https://pypi.org/project/python-dotenv/) for management of env vars
--   [sqlmodel](https://sqlmodel.tiangolo.com/tutorial/) for sql connection
+-   [pydantic-mongo](https://pypi.org/project/pydantic-mongo/) for mongodb connection
 
 ---
 

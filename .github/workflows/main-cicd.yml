@@ -1,0 +1,54 @@
+name: main-cicd.yml
+on:
+  push:
+    branches: ["main"]
+
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: |
+          uv sync --frozen
+
+      - name: Check types
+        run: |
+          uv run mypy . --strict
+
+      - name: Run tests
+        run: |
+          uv run pytest --disable-warnings -v --tb=short --maxfail=1
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check Out Repository
+        uses: actions/checkout@v2
+
+      - name: Add secrets
+        run: |
+          cat <<EOF > .env
+          DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}
+          EOF
+      - name: Login to dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push to dockerhub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: sonalyzebot/sonalyze:latest

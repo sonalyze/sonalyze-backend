@@ -1,6 +1,6 @@
 from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
-import pyroomacoustics as pra
+import pyroomacoustics as pra # type: ignore
 
 
 def simulate_room(room_scene: RestRoomScene) -> Simulation | None:

@@ -8,7 +8,7 @@ from typing import Annotated
 
 from fastapi.params import Depends
 
-from api.models.post_models import PostUserIds
+from api.models.post_models import PostUserIds, CreatedUser
 from database.engine import DataContext, get_db
 from database.schemas.user_db import UserDbModel
 from services.auth_service import get_token_header
@@ -16,27 +16,23 @@ from services.auth_service import get_token_header
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.put("/register", tags=["user"])
+@router.get("/register", tags=["user"])
 async def register_user(
-        body: PostUserIds,
         data_context: Annotated[DataContext, Depends(get_db)]
-) -> None:
+) -> CreatedUser:
     """
     Registers a new user.
     """
-    user_id: ObjectId
-    try:
-        user_id = ObjectId(body.token)
-    except InvalidId:
-        logger.warning("Invalid user id provided.")
-        raise HTTPException(status_code=400, detail="Bad Request")
 
     user = UserDbModel(
-        id=user_id,
         rooms=[],
         measurements=[]
     )
     await data_context.users.save(user)
+
+    return CreatedUser(
+        id=str(user.id)
+    )
 
 @router.put("/migrate", tags=["user"])
 async def migrate_user(

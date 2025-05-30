@@ -15,3 +15,6 @@ class UpdateScene(BaseModel):
 
 class PostUserIds(BaseModel):
     token: str = Field(..., title="User token", description="User token")
+
+class CreatedUser(BaseModel):
+    id: str = Field(..., title="User token", description="Id and token of the created user")

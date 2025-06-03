@@ -1,5 +1,4 @@
 from dotenv import dotenv_values
-from pathlib import Path
 from typing import Generator
 from pymongo import AsyncMongoClient
 
@@ -27,10 +26,7 @@ class DataContext:
 
 logger = logging.getLogger(__name__)
 
-
-env_path = Path(__file__).resolve().parents[2] / ".env"
-env = dotenv_values(env_path)
-connection_string = env.get("DB_CONNECTION_STRING")
+connection_string = dotenv_values(".env")["DB_CONNECTION_STRING"] or ""
 
 uri = f"mongodb://{connection_string}"
 client: AsyncMongoClient = AsyncMongoClient(uri)  # type: ignore[type-arg]

@@ -1,34 +1,40 @@
-from pymongo import MongoClient
-from dotenv import dotenv_values
+from database.engine import DataContext
+from database.schemas.material_db import MaterialDbModel
+from pymongo.errors import PyMongoError
+
 from typing import Any
-
-# DB-Verbindung
-env = dotenv_values("../../.env")
-uri = f"mongodb://{env.get('DB_CONNECTION_STRING', '')}"
-if not uri:
-    raise ValueError("DB_CONNECTION_STRING is empty or missing in .env")
-
-client: MongoClient[Any]
-client = MongoClient(uri)
-db = client["test_database"]
-collection = db["materials"]
+import re
 
 
-def get_material_json_from_db(name: str) -> dict[str, list[float]]:
-    # Suche alle Materialien mit Beschreibung, die 'name' enthält (case-insensitive)
-    result = collection.find_one({"description": {"$regex": name, "$options": "i"}})
+async def get_material_absorption(
+    name: str, db: DataContext
+) -> dict[str, list[Any | int]]:
+    try:
+        # Suche Materialbeschreibung via Regex
+        material: MaterialDbModel | None = await db.materials.find_one_by(
+            {"description": {"$regex": re.escape(name), "$options": "i"}}
+        )
 
-    if not result:
-        raise ValueError(f"Material '{name}' nicht gefunden.")
+        if not material:
+            raise ValueError(f"Material '{name}' nicht gefunden.")
 
-    # Frequenzwerte holen (Standard = 0, falls kein Wert vorhanden ist)
-    absorption = [
-        result.get("125", 0),
-        result.get("250", 0),
-        result.get("500", 0),
-        result.get("1000", 0),
-        result.get("2000", 0),
-        result.get("4000", 0),
-    ]
+        print(material)
 
-    return {"absorption": absorption}
+        absorption = [
+            getattr(material, "f125", 0),
+            getattr(material, "f250", 0),
+            getattr(material, "f500", 0),
+            getattr(material, "f1000", 0),
+            getattr(material, "f2000", 0),
+            getattr(material, "f4000", 0),
+        ]
+
+        return {"absorption": absorption}
+
+    except PyMongoError as e:
+        raise RuntimeError(f"Datenbankfehler: {e}")
+
+
+# How to use
+# from database.engine import data_context
+# material = await get_material_absorption("carpet", data_context)

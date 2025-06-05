@@ -45,3 +45,42 @@ async def delete_measurement(
     if measurement.ownerToken != token:
         raise HTTPException(status_code=401, detail="Unauthorized")
     await data_context.measurements.delete_by_id(measurement_id)
+
+@router.get("/imported/{measurement_id}", tags=["measurement"])
+async def import_measurement(
+        measurement_id: str,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)],
+) -> RestMeasurement | None:
+    """
+    Get a certain measurement based on its ID.
+    Adds the measurement to the current user's history.
+    """
+    measurement_db = await data_context.measurements.find_one_by_id(ObjectId(measurement_id))
+    if not measurement_db:
+        raise HTTPException(status_code=404, detail="Measurement not found")
+
+    user_db = await data_context.users.find_one_by_id(ObjectId(token))
+    assert user_db is not None
+    if measurement_id not in user_db.measurements:
+        user_db.measurements.append(str(measurement_db.id))
+        await data_context.users.save(user_db)
+
+    return map_measurement_db_to_rest_measurement(measurement_db, token)
+
+@router.delete("/imported/{measurement_id}", tags=["measurement"])
+async def remove_imported_measurement(
+        measurement_id: str,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)],
+) -> None:
+    """
+    Removes a measurement from the current user's history.
+    """
+
+    user_db = await data_context.users.find_one_by_id(ObjectId(token))
+    assert user_db is not None
+
+    if measurement_id in user_db.measurements:
+        user_db.measurements.remove(str(measurement_id))
+        await data_context.users.save(user_db)

@@ -108,6 +108,43 @@ async def update_room(
     room_db.updated_at = datetime.now()
     await data_context.rooms.save(room_db)
 
+@router.get("/imported/{room_id}", tags=["room"])
+async def import_room(
+        room_id: str,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)],
+) -> Room | None:
+    """
+    Get a certain room based on its ID.
+    Adds the room to the current user's history.
+    """
+    room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
+    if not room_db:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    user_db = await data_context.users.find_one_by_id(ObjectId(token))
+    assert user_db is not None
+    if room_id not in user_db.rooms:
+        user_db.rooms.append(str(room_db.id))
+        await data_context.users.save(user_db)
+
+    return map_room_db_to_room(room_db, token)
+
+@router.delete("/imported/{room_id}", tags=["room"])
+async def remove_imported_room(
+        room_id: str,
+        token: Annotated[str, Depends(get_token_header)],
+        data_context: Annotated[DataContext, Depends(get_db)],
+) -> None:
+    """
+    Remove a room from the current user's history.
+    """
+
+    user_db = await data_context.users.find_one_by_id(ObjectId(token))
+    assert user_db is not None
+    if room_id in user_db.rooms:
+        user_db.rooms.remove(str(room_id))
+        await data_context.users.save(user_db)
 
 @router.get("/{room_id}/scene", response_model=RestRoomScene, tags=["scene"])
 async def get_room_scene(
@@ -171,3 +208,4 @@ async def do_simulation(
     if room_scene is None:
         raise HTTPException(status_code=404, detail="Room scene not found")
     return simulate_room(room_scene)
+

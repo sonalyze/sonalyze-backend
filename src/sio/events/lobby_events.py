@@ -4,24 +4,10 @@ from pydantic import BaseModel
 from socketio import AsyncServer
 from typing import Dict, List, cast
 
+from sio.models import Lobby, LobbyClient, SocketSession, lobbies
+
 
 def register_lobby_events(sio: AsyncServer) -> None:
-
-    class LobbyClient(BaseModel):
-        sid: str
-        index: int
-
-    class Lobby(BaseModel):
-        host: str
-        lobby_id: str
-        microphones: List[LobbyClient]
-        speakers: List[LobbyClient]
-
-    class SocketSession(BaseModel):
-        lobby: str
-        isHost: bool
-
-    lobbies: Dict[str, Lobby] = {}
 
     @sio.event # type: ignore
     def create_lobby(sid: str, _: None) -> None:

@@ -10,28 +10,28 @@ from sio.models import Lobby, LobbyClient, SocketSession, lobbies
 def register_lobby_events(sio: AsyncServer) -> None:
 
     @sio.event # type: ignore
-    def create_lobby(sid: str, _: None) -> None:
+    async def create_lobby(sid: str, _: None) -> None:
         lobby_id = str(uuid.uuid4())
         client = LobbyClient(sid=sid, index=0)
         lobbies[lobby_id] = Lobby(host=sid, lobby_id=lobby_id, microphones=[client], speakers=[])
-        sio.save_session(sid, SocketSession(lobby=lobby_id, isHost=True))
-        sio.enter_room(sid, lobby_id)
-        sio.emit("create_lobby_res", {"lobbyId": lobby_id}, to=lobby_id)
+        await sio.save_session(sid, SocketSession(lobby=lobby_id, isHost=True))
+        await sio.enter_room(sid, lobby_id)
+        await sio.emit("create_lobby_res", {"lobbyId": lobby_id}, to=lobby_id)
 
     class JoinEventData(BaseModel):
         lobby_id: str
 
     @sio.event # type: ignore
-    def join_lobby(sid: str, data: JoinEventData) -> None:
+    async def join_lobby(sid: str, data: JoinEventData) -> None:
         if not data.lobby_id in lobbies:
-            sio.emit("join_lobby_fail", {"reason": "Lobby not found"} ,to=sid)
+            await sio.emit("join_lobby_fail", {"reason": "Lobby not found"} ,to=sid)
 
-        sio.save_session(sid, SocketSession(lobby=data.lobby_id, isHost=False))
+        await sio.save_session(sid, SocketSession(lobby=data.lobby_id, isHost=False))
         if len(lobbies[data.lobby_id].speakers) < len(lobbies[data.lobby_id].microphones):
             index = len(lobbies[data.lobby_id].speakers)
             client = LobbyClient(sid=sid, index=index)
             lobbies[data.lobby_id].speakers.append(client)
-            sio.emit("join_lobby_success", {
+            await sio.emit("join_lobby_success", {
                 "deviceType": "speaker",
                 "index": index,
                 "microphoneCount": len(lobbies[data.lobby_id].microphones),
@@ -41,7 +41,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
             index = len(lobbies[data.lobby_id].microphones)
             client = LobbyClient(sid=sid, index=index)
             lobbies[data.lobby_id].microphones.append(client)
-            sio.emit("join_lobby_success", {
+            await sio.emit("join_lobby_success", {
                 "deviceType": "microphone",
                 "index": index,
             }, to=sid)
@@ -49,7 +49,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
         mics = list(map(lambda m: m.index, lobbies[data.lobby_id].microphones))
         speakers = list(map(lambda s: s.index, lobbies[data.lobby_id].speakers))
 
-        sio.emit("device_choices", {
+        await sio.emit("device_choices", {
             "microphones": mics,
             "speakers": speakers,
         }, to=data.lobby_id)
@@ -61,7 +61,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
         index: int
 
     @sio.event # type: ignore
-    def chose_device_type(sid: str, data: ChoseDeviceTypeEventData) -> None:
+    async def chose_device_type(sid: str, data: ChoseDeviceTypeEventData) -> None:
         session = cast(SocketSession, sio.get_session(sid))
         lobby = lobbies[session.lobby]
         lobby.microphones = list(filter(lambda m: m.sid != sid, lobby.microphones))
@@ -75,7 +75,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
         mics = list(map(lambda m: m.index, lobby.microphones))
         speakers = list(map(lambda s: s.index, lobby.speakers))
 
-        sio.emit("device_choices", {
+        await sio.emit("device_choices", {
             "microphones": mics,
             "speakers": speakers,
         }, to=lobby.lobby_id)

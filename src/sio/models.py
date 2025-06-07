@@ -18,4 +18,8 @@ class SocketSession(BaseModel):
     lobby: str
     isHost: bool
 
+class RecordData(BaseModel):
+    sid: str
+    recording: str
+
 lobbies: Dict[str, Lobby] = {}

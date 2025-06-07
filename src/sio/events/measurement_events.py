@@ -3,26 +3,24 @@ from socketio import AsyncServer
 from typing import cast
 import asyncio
 
-from services.measurement_service import measurement_controller
+from services.measurement_service import measurement_controller, measurement_tasks, measurement_queues
 from sio.models import SocketSession, lobbies
 
 
-def register_measurement_events(sio: AsyncServer) -> None:
+async def register_measurement_events(sio: AsyncServer) -> None:
     @sio.event # type: ignore
-    def start_measurement(sid: str, data: None) -> None:
+    async def start_measurement(sid: str, _: None) -> None:
         session = cast(SocketSession, sio.get_session(sid))
         if not session.isHost:
             return
 
         if len(lobbies[session.lobby].speakers) == 0:
-            sio.emit("start_measurement_fail", {"reason": "Not enough speakers!"})
+            await sio.emit("start_measurement_fail", {"reason": "Not enough speakers!"})
         elif len(lobbies[session.lobby].microphones) == 0:
-            sio.emit("start_measurement_fail", {"reason": "Not enough speakers!"})
+            await sio.emit("start_measurement_fail", {"reason": "Not enough microphones!"})
 
-        asyncio.create_task(measurement_controller())
-
-
-
+        task = asyncio.create_task(measurement_controller(sio, lobby=lobbies[session.lobby]))
+        measurement_tasks[session.lobby] = task
 
 
 
@@ -30,5 +28,6 @@ def register_measurement_events(sio: AsyncServer) -> None:
         recording: str
 
     @sio.event # type: ignore
-    def send_record_data(sid: str, data: SendRecordEventData) -> None:
-        pass
+    async def send_record_data(sid: str, data: SendRecordEventData) -> None:
+        session = cast(SocketSession, sio.get_session(sid))
+        await measurement_queues[session.lobby].put({"sid": sid, "recording": data.recording})

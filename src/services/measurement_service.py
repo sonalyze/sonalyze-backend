@@ -1,13 +1,14 @@
 import asyncio
 
 from socketio import AsyncServer
-from typing import List
+from typing import List, Dict
 from sio.models import Lobby, RecordData
 
+lobbies: Dict[str, Lobby] = {}
 measurement_tasks: dict[str, asyncio.Task] = {}
-measurement_queues: dict[str, asyncio.Queue] = {}
+measurement_queues: dict[str, asyncio.Queue[RecordData]] = {}
 
-async def measurement_controller(sio: AsyncServer, lobby: Lobby):
+async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     await sio.emit("start_measurement", {}, to=lobby.lobby_id)
     measurement_queues[lobby.lobby_id] = asyncio.Queue()
 

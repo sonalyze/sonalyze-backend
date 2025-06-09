@@ -1,5 +1,8 @@
 # socketio.pyi
-from typing import TypeVar, Callable, ParamSpec, Any, Optional
+import asyncio
+from typing import TypeVar, Callable, ParamSpec, Any, Optional, Dict
+
+from sio.models import Lobby, RecordData
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -10,3 +13,7 @@ class AsyncServer:
     def emit(self, event: str, data: Any, room: Optional[str] = ...) -> None: ...
 
 sio_app: Any
+
+lobbies: Dict[str, Lobby]
+measurement_tasks: dict[str, asyncio.Task]
+measurement_queues: dict[str, asyncio.Queue[RecordData]]

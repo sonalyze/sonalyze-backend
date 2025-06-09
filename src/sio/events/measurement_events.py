@@ -3,11 +3,11 @@ from socketio import AsyncServer
 from typing import cast
 import asyncio
 
-from services.measurement_service import measurement_controller, measurement_tasks, measurement_queues
-from sio.models import SocketSession, lobbies
+from services.measurement_service import measurement_controller, lobbies, measurement_tasks, measurement_queues
+from sio.models import SocketSession, RecordData
 
 
-async def register_measurement_events(sio: AsyncServer) -> None:
+def register_measurement_events(sio: AsyncServer) -> None:
     @sio.event # type: ignore
     async def start_measurement(sid: str, _: None) -> None:
         session = cast(SocketSession, sio.get_session(sid))
@@ -30,4 +30,4 @@ async def register_measurement_events(sio: AsyncServer) -> None:
     @sio.event # type: ignore
     async def send_record_data(sid: str, data: SendRecordEventData) -> None:
         session = cast(SocketSession, sio.get_session(sid))
-        await measurement_queues[session.lobby].put({"sid": sid, "recording": data.recording})
+        await measurement_queues[session.lobby].put(RecordData(sid=sid, recording=data.recording))

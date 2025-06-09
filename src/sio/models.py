@@ -21,5 +21,3 @@ class SocketSession(BaseModel):
 class RecordData(BaseModel):
     sid: str
     recording: str
-
-lobbies: Dict[str, Lobby] = {}

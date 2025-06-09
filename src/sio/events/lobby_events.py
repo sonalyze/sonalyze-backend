@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from socketio import AsyncServer
 from typing import Dict, List, cast
 
-from sio.models import Lobby, LobbyClient, SocketSession, lobbies
+from services.measurement_service import lobbies
+from sio.models import Lobby, LobbyClient, SocketSession
 
 
 def register_lobby_events(sio: AsyncServer) -> None:
@@ -33,9 +34,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
             lobbies[data.lobby_id].speakers.append(client)
             await sio.emit("join_lobby_success", {
                 "deviceType": "speaker",
-                "index": index,
-                "microphoneCount": len(lobbies[data.lobby_id].microphones),
-                "speakerCount": len(lobbies[data.lobby_id].speakers),
+                "index": index
             },  to=sid)
         else:
             index = len(lobbies[data.lobby_id].microphones)

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import socketio
 
@@ -12,17 +13,18 @@ from .models import Lobby, RecordData, SocketSession
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 app = socketio.ASGIApp(sio, static_files=None)
 
+logger = logging.getLogger('sio')
 
 @sio.event # type: ignore
-def connect(sid, environ) -> None:
-    print('Client connected:', sid)
+async def connect(sid, environ) -> None:
+    logger.warning(f"Connected {sid}")
 
 @sio.event # type: ignore
-async def disconnect(sid) -> None:
-    print('Client disconnected:', sid)
-    session = cast(SocketSession, sio.get_session(sid))
-    if session and session.lobby:
-        if measurement_tasks[session.lobby]:
+async def disconnect(sid, reason) -> None:
+    logger.warning(f"Disconnected {sid}")
+    session = cast(SocketSession, await sio.get_session(sid))
+    if hasattr(session, 'lobby'):
+        if session.lobby in measurement_tasks.keys():
             measurement_tasks[session.lobby].cancel()
             measurement_tasks.pop(session.lobby)
 
@@ -30,11 +32,17 @@ async def disconnect(sid) -> None:
             }, to=session.lobby)
             lobbies.pop(session.lobby)
             measurement_queues.pop(session.lobby)
+            await sio.close_room(session.lobby)
 
-        else:
+        elif session.lobby in lobbies:
             lobby = lobbies[session.lobby]
             lobby.microphones = list(filter(lambda m: m.sid != sid, lobby.microphones))
             lobby.speakers = list(filter(lambda s: s.sid != sid, lobby.speakers))
+
+            if session.isHost:
+                await sio.emit("cancel_measurement", {"reason": "The host has disconnected"
+                                                      }, to=session.lobby)
+                await sio.close_room(session.lobby)
 
             mics = list(map(lambda m: m.index, lobby.microphones))
             speakers = list(map(lambda s: s.index, lobby.speakers))
@@ -43,11 +51,6 @@ async def disconnect(sid) -> None:
                 "microphones": mics,
                 "speakers": speakers,
             }, to=lobby.lobby_id)
-
-@sio.event # type: ignore
-def message(sid, data) -> None:
-    print('Message from {}: {}'.format(sid, data))
-    sio.send(sid, 'Message received: {}'.format(data))
 
 register_lobby_events(sio)
 register_measurement_events(sio)

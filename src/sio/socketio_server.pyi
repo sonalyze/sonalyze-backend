@@ -13,7 +13,3 @@ class AsyncServer:
     def emit(self, event: str, data: Any, room: Optional[str] = ...) -> None: ...
 
 sio_app: Any
-
-lobbies: Dict[str, Lobby]
-measurement_tasks: dict[str, asyncio.Task]
-measurement_queues: dict[str, asyncio.Queue[RecordData]]

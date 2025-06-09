@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 import socketio
@@ -6,9 +5,9 @@ import socketio
 from services.measurement_service import measurement_tasks, lobbies, measurement_queues
 from .events.lobby_events import register_lobby_events
 from .events.measurement_events import register_measurement_events
-from typing import Dict, cast
+from typing import cast
 
-from .models import Lobby, RecordData, SocketSession
+from .models import SocketSession
 
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 app = socketio.ASGIApp(sio, static_files=None)

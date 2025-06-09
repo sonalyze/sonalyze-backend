@@ -3,7 +3,7 @@ import uuid
 
 from pydantic import BaseModel, ValidationError
 from socketio import AsyncServer
-from typing import Dict, List, cast
+from typing import cast
 
 from services.measurement_service import lobbies, measurement_tasks
 from sio.models import Lobby, LobbyClient, SocketSession

@@ -6,7 +6,7 @@ from typing import List, Dict
 from sio.models import Lobby, RecordData
 
 lobbies: Dict[str, Lobby] = {}
-measurement_tasks: dict[str, asyncio.Task] = {}
+measurement_tasks: dict[str, asyncio.Task] = {} # type: ignore
 measurement_queues: dict[str, asyncio.Queue[RecordData]] = {}
 
 logger = logging.getLogger(__name__)

@@ -14,7 +14,7 @@ def register_measurement_events(sio: AsyncServer) -> None:
     @sio.event # type: ignore
     async def start_measurement(sid: str, _: None) -> None:
         session = cast(SocketSession, await sio.get_session(sid))
-        if not hasattr(session, "isHost") or not session.isHost or session.isHost in measurement_tasks.keys():
+        if not hasattr(session, "isHost") or not session.isHost or session.lobby in measurement_tasks.keys():
             return
 
         mic_indices = {c.index for c in lobbies[session.lobby].microphones}

@@ -3,8 +3,10 @@ from api.models.simulation import Simulation
 from database.engine import data_context
 import pyroomacoustics as pra
 import numpy as np
-
+import logging
 from services import get_material
+
+logger = logging.getLogger("uvicorn.info")
 
 
 async def simulate_room(room_scene: RestRoomScene) -> Simulation | None:

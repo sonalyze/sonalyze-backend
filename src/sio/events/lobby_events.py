@@ -8,7 +8,7 @@ from typing import cast
 from services.measurement_service import lobbies, measurement_tasks
 from sio.models import Lobby, LobbyClient, SocketSession
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.info")
 
 def register_lobby_events(sio: AsyncServer) -> None:
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Annotated
+import logging
 
 from fastapi.params import Depends
 
@@ -9,6 +10,8 @@ from services.auth_service import get_token_header, HttpObjectId
 from services.mapper_service import map_measurement_db_to_rest_measurement
 
 router = APIRouter()
+
+logger = logging.getLogger("uvicorn.info")
 
 @router.get("/", response_model=List[RestMeasurement], tags=["measurements"])
 async def get_measurements(

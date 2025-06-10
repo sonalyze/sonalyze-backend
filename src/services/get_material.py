@@ -3,7 +3,11 @@ from database.schemas.material_db import MaterialDbModel
 from pymongo.errors import PyMongoError
 
 from typing import Any, Dict
+import logging
+from typing import Any
 import re
+
+logger = logging.getLogger("uvicorn.info")
 
 
 async def get_material_absorption(name: str, db: DataContext) -> Dict[str, Any]:

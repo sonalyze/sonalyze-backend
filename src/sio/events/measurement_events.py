@@ -8,7 +8,7 @@ import asyncio
 from services.measurement_service import measurement_controller, lobbies, measurement_tasks, measurement_queues
 from sio.models import SocketSession, RecordData
 
-logger = logging.getLogger("sio")
+logger = logging.getLogger("uvicorn.info")
 
 def register_measurement_events(sio: AsyncServer) -> None:
     @sio.event # type: ignore

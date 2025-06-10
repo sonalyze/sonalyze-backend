@@ -1,10 +1,27 @@
 from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
+from database.engine import data_context
 import pyroomacoustics as pra
 import numpy as np
 
+from services import get_material
 
-def simulate_room(room_scene: RestRoomScene) -> Simulation | None:
+
+async def simulate_room(room_scene: RestRoomScene) -> Simulation | None:
+    # Materialien für alle Wände laden
+    materials = {}
+    for wall in ["east", "west", "north", "south", "ceiling", "floor"]:
+        material_name = getattr(room_scene.materials, wall)
+        material_data = await get_material.get_material_absorption(
+            material_name, data_context
+        )
+        materials[wall] = pra.Material(
+            energy_absorption={
+                "coeffs": material_data["coeffs"],
+                "center_freqs": material_data["center_freqs"],
+            }
+        )
+
     room_dim = [
         room_scene.dimensions.width,
         room_scene.dimensions.depth,
@@ -12,7 +29,7 @@ def simulate_room(room_scene: RestRoomScene) -> Simulation | None:
     ]  # Breite, Tiefe, Höhe
 
     room = pra.ShoeBox(
-        room_dim, fs=16000, absorption=0.3, max_order=10
+        room_dim, fs=48000, materials=materials, max_order=10
     )  # Standardabsorption mit genauen Materialien ersetzen
 
     for speaker in room_scene.speakers:
@@ -27,7 +44,7 @@ def simulate_room(room_scene: RestRoomScene) -> Simulation | None:
         ]
     )
 
-    room.add_microphone_array(pra.MicrophoneArray(mic_positions, fs=16000))
+    room.add_microphone_array(pra.MicrophoneArray(mic_positions, fs=48000))
 
     room.compute_rir()
     if room.rir is None:

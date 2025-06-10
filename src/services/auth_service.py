@@ -1,5 +1,4 @@
 from bson import ObjectId
-from bson.errors import InvalidId
 from fastapi import HTTPException
 from typing import Annotated
 
@@ -9,7 +8,7 @@ import logging
 
 from database.engine import DataContext, get_db
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.info")
 bearer_scheme = HTTPBearer()
 
 

@@ -12,7 +12,7 @@ from .models import SocketSession
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 app = socketio.ASGIApp(sio, static_files=None)
 
-logger = logging.getLogger('sio')
+logger = logging.getLogger("uvicorn.info")
 
 @sio.event # type: ignore
 async def connect(sid, environ) -> None:

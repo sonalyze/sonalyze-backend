@@ -8,8 +8,6 @@ from sio.socketio_server import sio_app
 from dotenv import load_dotenv
 
 load_dotenv()
-
-logging.basicConfig(level=logging.INFO)
 app = FastAPI(
     title="Sonalyze API",
     description="This is the API for Sonalyze.",

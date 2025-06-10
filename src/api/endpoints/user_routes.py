@@ -11,7 +11,7 @@ from database.engine import DataContext, get_db
 from database.schemas.user_db import UserDbModel
 from services.auth_service import get_token_header, HttpObjectId
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.info")
 router = APIRouter()
 
 @router.get("/register", tags=["user"])

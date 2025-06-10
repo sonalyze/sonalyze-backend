@@ -2,7 +2,9 @@ from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
 import pyroomacoustics as pra
 import numpy as np
+import logging
 
+logger = logging.getLogger("uvicorn.info")
 
 def simulate_room(room_scene: RestRoomScene) -> Simulation | None:
     room_dim = [

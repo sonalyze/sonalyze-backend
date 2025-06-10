@@ -9,7 +9,7 @@ lobbies: Dict[str, Lobby] = {}
 measurement_tasks: dict[str, asyncio.Task] = {} # type: ignore
 measurement_queues: dict[str, asyncio.Queue[RecordData]] = {}
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.info")
 
 async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     await sio.emit("start_measurement", {}, to=lobby.lobby_id)

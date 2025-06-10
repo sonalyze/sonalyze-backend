@@ -1,8 +1,4 @@
-# socketio.pyi
-import asyncio
-from typing import TypeVar, Callable, ParamSpec, Any, Optional, Dict
-
-from sio.models import Lobby, RecordData
+from typing import TypeVar, Callable, ParamSpec, Any, Optional
 
 P = ParamSpec("P")
 T = TypeVar("T")

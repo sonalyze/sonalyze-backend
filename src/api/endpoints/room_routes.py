@@ -21,7 +21,7 @@ from services.mapper_service import (
 )
 from services.simulation_service import simulate_room
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.info")
 
 router = APIRouter()
 

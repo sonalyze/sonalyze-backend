@@ -20,6 +20,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
         await sio.save_session(sid, SocketSession(lobby=lobby_id, isHost=True))
         await sio.enter_room(sid, lobby_id)
         await sio.emit("create_lobby_res", {"lobbyId": lobby_id}, to=lobby_id)
+        logger.info(f"Created lobby {lobby_id} from {sid}")
 
     class JoinEventData(BaseModel):
         lobbyId: str
@@ -62,6 +63,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
 
         mics = list(map(lambda m: m.index, lobbies[data.lobbyId].microphones))
         speakers = list(map(lambda s: s.index, lobbies[data.lobbyId].speakers))
+        logger.info(f"Client {sid} joined lobby {data.lobbyId}")
 
         await sio.emit("device_choices", {
             "microphones": mics,

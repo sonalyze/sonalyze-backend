@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from api import router as api_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +8,8 @@ from sio.socketio_server import sio_app
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
 app = FastAPI(
     title="Sonalyze API",
     description="This is the API for Sonalyze.",

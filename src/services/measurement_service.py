@@ -26,11 +26,13 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
 
     record_data: List[RecordData] = []
 
+    logger.info(f"Lobby {lobby.lobby_id} waiting for recorded data...")
     while len(record_data) < len(measurement_queues):
         data = await measurement_queues[lobby.lobby_id].get()
 
         record_data.append(data)
 
+    logger.info(f"Lobby {lobby.lobby_id} received recorded data: {len(record_data)}")
     # TODO do calculations
 
     await asyncio.sleep(2)
@@ -39,3 +41,4 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     lobbies.pop(lobby.lobby_id)
     measurement_queues.pop(lobby.lobby_id)
     measurement_tasks.pop(lobby.lobby_id)
+    logger.info(f"Lobby {lobby.lobby_id} ended measurement successfully")

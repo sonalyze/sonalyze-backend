@@ -16,11 +16,11 @@ logger = logging.getLogger('sio')
 
 @sio.event # type: ignore
 async def connect(sid, environ) -> None:
-    logger.warning(f"Connected {sid}")
+    logger.info(f"Connected {sid}")
 
 @sio.event # type: ignore
 async def disconnect(sid, reason) -> None:
-    logger.warning(f"Disconnected {sid}")
+    logger.info(f"Disconnected {sid}")
     session = cast(SocketSession, await sio.get_session(sid))
     if hasattr(session, 'lobby'):
         if session.lobby in measurement_tasks.keys():
@@ -32,6 +32,7 @@ async def disconnect(sid, reason) -> None:
             lobbies.pop(session.lobby)
             measurement_queues.pop(session.lobby)
             await sio.close_room(session.lobby)
+            logger.info(f"Interrupted measurement of lobby {session.lobby} because {sid} disconnected")
 
         elif session.lobby in lobbies:
             lobby = lobbies[session.lobby]
@@ -42,6 +43,7 @@ async def disconnect(sid, reason) -> None:
                 await sio.emit("cancel_measurement", {"reason": "The host has disconnected"
                                                       }, to=session.lobby)
                 await sio.close_room(session.lobby)
+                logger.info(f"Client {sid} disconnected from lobby {session.lobby}")
 
             mics = list(map(lambda m: m.index, lobby.microphones))
             speakers = list(map(lambda s: s.index, lobby.speakers))

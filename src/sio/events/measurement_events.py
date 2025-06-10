@@ -33,6 +33,7 @@ def register_measurement_events(sio: AsyncServer) -> None:
 
         task = asyncio.create_task(measurement_controller(sio, lobby=lobbies[session.lobby]))
         measurement_tasks[session.lobby] = task
+        logger.info(f"Started measurement for lobby {session.lobby}")
 
 
 
@@ -49,3 +50,4 @@ def register_measurement_events(sio: AsyncServer) -> None:
 
         session = cast(SocketSession, await sio.get_session(sid))
         await measurement_queues[session.lobby].put(RecordData(sid=sid, recording=data.recording))
+        logger.info(f"Microphone data from {sid} arrived for lobby {session.lobby}")

@@ -48,5 +48,4 @@ def register_measurement_events(sio: AsyncServer) -> None:
             return
 
         session = cast(SocketSession, await sio.get_session(sid))
-        logger.warning(f"Sending record data: {data}")
         await measurement_queues[session.lobby].put(RecordData(sid=sid, recording=data.recording))

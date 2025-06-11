@@ -1,16 +1,16 @@
 from database.engine import DataContext
 from database.schemas.material_db import MaterialDbModel
 from pymongo.errors import PyMongoError
-
 import logging
-from typing import Any
 import re
+from models.material import MaterialAbsorptionResult
 
 logger = logging.getLogger("uvicorn.info")
 
+
 async def get_material_absorption(
     name: str, db: DataContext
-) -> dict[str, list[Any | int]]:
+) -> MaterialAbsorptionResult:
     try:
         # Suche Materialbeschreibung via Regex
         material: MaterialDbModel | None = await db.materials.find_one_by(
@@ -20,18 +20,20 @@ async def get_material_absorption(
         if not material:
             raise ValueError(f"Material '{name}' nicht gefunden.")
 
-        print(material)
-
-        absorption = [
-            getattr(material, "f125", 0),
-            getattr(material, "f250", 0),
-            getattr(material, "f500", 0),
-            getattr(material, "f1000", 0),
-            getattr(material, "f2000", 0),
-            getattr(material, "f4000", 0),
+        coeffs = [
+            getattr(material, "f125", 0.0),
+            getattr(material, "f250", 0.0),
+            getattr(material, "f500", 0.0),
+            getattr(material, "f1000", 0.0),
+            getattr(material, "f2000", 0.0),
+            getattr(material, "f4000", 0.0),
         ]
 
-        return {"absorption": absorption}
+        return MaterialAbsorptionResult(
+            name=material.description,
+            coeffs=coeffs,
+            center_freqs=[125, 250, 500, 1000, 2000, 4000],
+        )
 
     except PyMongoError as e:
         raise RuntimeError(f"Datenbankfehler: {e}")

@@ -1,18 +1,16 @@
 from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
-from database.engine import DataContext, get_db
+from database.engine import DataContext
 import pyroomacoustics as pra
 import numpy as np
 import logging
 from services import get_material
-from typing import Annotated
-from fastapi import Depends
 
 logger = logging.getLogger("uvicorn.info")
 
 
 async def simulate_room(
-    room_scene: RestRoomScene, db: Annotated[DataContext, Depends(get_db)]
+    room_scene: RestRoomScene, db: DataContext
 ) -> Simulation | None:
     # Materialien für alle Wände laden
     materials = {}

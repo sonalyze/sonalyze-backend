@@ -1,17 +1,15 @@
-from database.engine import DataContext, get_db
+from database.engine import DataContext
 from database.schemas.material_db import MaterialDbModel
 from pymongo.errors import PyMongoError
 import logging
 import re
 from models.material import MaterialAbsorptionResult
-from typing import Annotated
-from fastapi import Depends
 
 logger = logging.getLogger("uvicorn.info")
 
 
 async def get_material_absorption(
-    name: str, db: Annotated[DataContext, Depends(get_db)]
+    name: str, db: DataContext
 ) -> MaterialAbsorptionResult:
     try:
         # Suche Materialbeschreibung via Regex

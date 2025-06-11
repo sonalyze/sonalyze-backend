@@ -1,26 +1,28 @@
 from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
-from database.engine import data_context
+from database.engine import DataContext, get_db
 import pyroomacoustics as pra
 import numpy as np
 import logging
 from services import get_material
+from typing import Annotated
+from fastapi import Depends
 
 logger = logging.getLogger("uvicorn.info")
 
 
-async def simulate_room(room_scene: RestRoomScene) -> Simulation | None:
+async def simulate_room(
+    room_scene: RestRoomScene, db: Annotated[DataContext, Depends(get_db)]
+) -> Simulation | None:
     # Materialien für alle Wände laden
     materials = {}
     for wall in ["east", "west", "north", "south", "ceiling", "floor"]:
         material_name = getattr(room_scene.materials, wall)
-        material_data = await get_material.get_material_absorption(
-            material_name, data_context
-        )
+        material_data = await get_material.get_material_absorption(material_name, db)
         materials[wall] = pra.Material(
             energy_absorption={
-                "coeffs": material_data["coeffs"],
-                "center_freqs": material_data["center_freqs"],
+                "coeffs": material_data.coeffs,
+                "center_freqs": material_data.center_freqs,
             }
         )
 

@@ -209,5 +209,5 @@ async def do_simulation(
     room_scene: RestRoomScene | None = await get_room_scene(room_id, data_context)
     if room_scene is None:
         raise HTTPException(status_code=404, detail="Room scene not found")
-    result = await simulate_room(room_scene)
+    result = await simulate_room(room_scene, data_context)
     return result

@@ -1,5 +1,5 @@
 import logging
-
+import base64
 from pydantic import BaseModel, ValidationError
 from socketio import AsyncServer
 from typing import cast
@@ -47,6 +47,20 @@ def register_measurement_events(sio: AsyncServer) -> None:
         except ValidationError as e:
             logger.error(e)
             return
+        logger.info(f"Recording Data recieved from {sid}")
+        recording_length = len(data.recording)
+        logger.info(f"Received audio data: {recording_length} characters")
+        sample_prefix = data.recording[:20]
+        sample_suffix = data.recording[-20:] if recording_length > 20 else ""
+        logger.info(f"Data sample: {sample_prefix}...{sample_suffix}")
+
+               # Verify it's valid base64
+        try:
+            # Attempt to decode to validate base64 format
+            decoded_sample = base64.b64decode(data.recording)
+            logger.info(f"Base64 format is valid {decoded_sample[:20]}...{decoded_sample[-20:] if len(decoded_sample) > 20 else ''}")
+        except Exception as e:
+            logger.error(f"Invalid base64 format: {str(e)}")
 
         session = cast(SocketSession, await sio.get_session(sid))
         await measurement_queues[session.lobby].put(RecordData(sid=sid, recording=data.recording))

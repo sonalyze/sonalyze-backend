@@ -86,7 +86,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
 
         session = cast(SocketSession, await sio.get_session(sid))
 
-        if not hasattr(session, "lobbyId"):
+        if not hasattr(session, "lobby"):
             return
 
         if session.lobby in measurement_tasks:

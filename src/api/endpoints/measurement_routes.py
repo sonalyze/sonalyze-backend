@@ -46,7 +46,7 @@ async def delete_measurement(
         raise HTTPException(status_code=404, detail="Measurement not found")
     if measurement.ownerToken != token:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    await data_context.measurements.delete_by_id(measurement_id)
+    await data_context.measurements.delete_by_id(measurement.id)
 
 @router.get("/imported/{measurement_id}", tags=["measurement"])
 async def import_measurement(

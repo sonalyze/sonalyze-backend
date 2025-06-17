@@ -43,10 +43,12 @@ async def disconnect(sid, reason) -> None:
                 await sio.emit("cancel_measurement", {"reason": "The host has disconnected"
                                                       }, to=session.lobby)
                 await sio.close_room(session.lobby)
-                logger.info(f"Client {sid} disconnected from lobby {session.lobby}")
+                lobbies.pop(session.lobby)
+                logger.info(f"Host {sid} disconnected from lobby {session.lobby}, lobby closed")
 
             mics = list(map(lambda m: m.index, lobby.microphones))
             speakers = list(map(lambda s: s.index, lobby.speakers))
+            logger.info(f"Client {sid} disconnected from lobby {session.lobby}")
 
             await sio.emit("device_choices", {
                 "microphones": mics,

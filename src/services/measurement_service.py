@@ -47,7 +47,7 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     # TODO lobby.distances has distances between any mic and any speaker in map in speaker -> mic -> distance format
 
     await asyncio.sleep(2)
-    logger.info(f"Lobby {lobby.lobby_id} measuremetn results: {data_list}")
+    logger.info(f"Lobby {lobby.lobby_id} measurement results: {data_list}")
     await sio.emit("results", [[{"rt60": [.2,.3], "c50": [.2,.3], "c80": [.2,.3], "g": [.2,.3], "d50": [.2,.3]}]], to=lobby.lobby_id)
     await sio.close_room(lobby.lobby_id)
     lobbies.pop(lobby.lobby_id)

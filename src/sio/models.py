@@ -12,6 +12,9 @@ class Lobby(BaseModel):
     lobby_id: str
     microphones: List[LobbyClient]
     speakers: List[LobbyClient]
+    repetitions: int
+    delay: float
+    distances: dict[int, dict[int, float]]
 
 
 class SocketSession(BaseModel):

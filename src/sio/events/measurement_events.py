@@ -2,7 +2,7 @@ import logging
 
 from pydantic import BaseModel, ValidationError
 from socketio import AsyncServer
-from typing import cast
+from typing import cast, Dict
 import asyncio
 
 from services.measurement_service import measurement_controller, lobbies, measurement_tasks, measurement_queues
@@ -11,11 +11,27 @@ from sio.models import SocketSession, RecordData
 logger = logging.getLogger("uvicorn.info")
 
 def register_measurement_events(sio: AsyncServer) -> None:
+
+    class StartMeasurementProps(BaseModel):
+        repetitions: int
+        delay: float
+        distances: Dict[int, Dict[int, float]]
+
     @sio.event # type: ignore
-    async def start_measurement(sid: str, _: None) -> None:
+    async def start_measurement(sid: str, data: StartMeasurementProps) -> None:
+        try:
+            data = StartMeasurementProps.model_validate(data)
+        except ValidationError as e:
+            logger.error(e)
+            return
+
         session = cast(SocketSession, await sio.get_session(sid))
         if not hasattr(session, "isHost") or not session.isHost or session.lobby in measurement_tasks.keys():
             return
+
+        lobbies[session.lobby].repetitions = data.repetitions
+        lobbies[session.lobby].delay = data.delay
+        lobbies[session.lobby].distances = data.distances
 
         mic_indices = {c.index for c in lobbies[session.lobby].microphones}
         speaker_indices = {c.index for c in lobbies[session.lobby].speakers}

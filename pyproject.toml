@@ -13,6 +13,7 @@ dependencies = [
     "pytest>=8.3.5",
     "python-dotenv>=1.1.0",
     "python-socketio[asgi]>=5.13.0",
+    "soundfile>=0.13.1",
 ]
 [tool.mypy]
 disable_error_code = ["import-untyped"]

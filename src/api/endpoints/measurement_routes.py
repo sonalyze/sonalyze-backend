@@ -32,7 +32,7 @@ async def get_measurements(
         measurements.append(map_measurement_db_to_rest_measurement(measurement_db, token))
     return measurements
 
-@router.delete("/{id}", tags=["measurements"])
+@router.delete("/{measurement_id}", tags=["measurements"])
 async def delete_measurement(
         measurement_id: str,
         token: Annotated[str, Depends(get_token_header)],

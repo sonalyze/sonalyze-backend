@@ -53,15 +53,18 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
             await asyncio.sleep(lobby.delay)
 
     await sio.emit("end_measurement", {}, to=lobby.lobby_id)
-    recorded_signals : List[NDArray[np.floating]] = []
-    for record in record_data:
-        audio_data, sample_rate = decode_audio_data(record.recording)
-        recorded_signals.append(audio_data)
+    recorded_signals_cycles : List[List[NDArray[np.floating]]] = []
+    for cycle in data_list:
+        recorded_signals : List[NDArray[np.floating]] = []
+        for record in cycle:
+            audio_data, sample_rate = decode_audio_data(record.recording)
+            recorded_signals.append(audio_data)
+        recorded_signals_cycles.append(recorded_signals)
     
     # Temporary
     sweep_signal = create_in(48000)
 
-    results = analyze_acoustic_parameters(sweep_signal, recorded_signals, sample_rate)
+    results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results: {data_list}")
@@ -280,19 +283,20 @@ def calculate_acoustic_parameters(ir: NDArray[np.floating], fs: int, center_freq
         ir=ir.tolist()
     )
 
-def analyze_acoustic_parameters(sweep_signal: NDArray[np.floating], recorded_signals: list[NDArray[np.floating]], sample_rate: int) -> list[AcousticParameters]:
+def analyze_acoustic_parameters(sweep_signal: NDArray[np.floating], recorded_signals_cycles: list[list[NDArray[np.floating]]], sample_rate: int) -> list[list[AcousticParameters]]:
     """Returns results for every mic speaker configuration"""
     results = []
     
     center_freqs, filters = get_octave_band_filters(sample_rate)
-    
-    for recorded_signal in recorded_signals:
-        tf = calculate_transfer_function(sweep_signal, recorded_signal)
-        
-        ir = extract_impulse_response(tf)
-        
-        mic_results = calculate_acoustic_parameters(ir, sample_rate, center_freqs, filters)
-        
-        results.append(mic_results)
-    
+    for recorded_cycle in recorded_signals_cycles:
+        results_cycle = []
+        for recorded_signal in recorded_cycle:
+            tf = calculate_transfer_function(sweep_signal, recorded_signal)
+            
+            ir = extract_impulse_response(tf)
+            
+            mic_results = calculate_acoustic_parameters(ir, sample_rate, center_freqs, filters)
+            
+            results_cycle.append(mic_results)
+        results.append(results_cycle)
     return results

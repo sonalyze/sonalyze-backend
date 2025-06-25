@@ -16,7 +16,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
     async def create_lobby(sid: str, _: None) -> None:
         lobby_id = str(uuid.uuid4())
         client = LobbyClient(sid=sid, index=0)
-        lobbies[lobby_id] = Lobby(host=sid, lobby_id=lobby_id, microphones=[client], speakers=[])
+        lobbies[lobby_id] = Lobby(host=sid, lobby_id=lobby_id, microphones=[client], speakers=[], repetitions=1, delay=0, distances={})
         await sio.save_session(sid, SocketSession(lobby=lobby_id, isHost=True))
         await sio.enter_room(sid, lobby_id)
         await sio.emit("create_lobby_res", {"lobbyId": lobby_id}, to=lobby_id)
@@ -86,7 +86,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
 
         session = cast(SocketSession, await sio.get_session(sid))
 
-        if not hasattr(session, "lobbyId"):
+        if not hasattr(session, "lobby"):
             return
 
         if session.lobby in measurement_tasks:

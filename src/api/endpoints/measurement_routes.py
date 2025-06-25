@@ -32,7 +32,7 @@ async def get_measurements(
         measurements.append(map_measurement_db_to_rest_measurement(measurement_db, token))
     return measurements
 
-@router.delete("/{id}", tags=["measurements"])
+@router.delete("/{measurement_id}", tags=["measurements"])
 async def delete_measurement(
         measurement_id: str,
         token: Annotated[str, Depends(get_token_header)],
@@ -46,7 +46,7 @@ async def delete_measurement(
         raise HTTPException(status_code=404, detail="Measurement not found")
     if measurement.ownerToken != token:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    await data_context.measurements.delete_by_id(measurement_id)
+    await data_context.measurements.delete_by_id(measurement.id)
 
 @router.get("/imported/{measurement_id}", tags=["measurement"])
 async def import_measurement(

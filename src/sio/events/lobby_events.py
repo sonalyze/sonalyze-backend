@@ -5,7 +5,7 @@ from pydantic import BaseModel, ValidationError
 from socketio import AsyncServer
 from typing import cast
 
-from services.measurement_service import lobbies, measurement_tasks
+from services.measurement_service import lobbies, measurement_tasks, id_map
 from sio.models import Lobby, LobbyClient, SocketSession
 
 logger = logging.getLogger("uvicorn.info")
@@ -15,7 +15,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
     @sio.event # type: ignore
     async def create_lobby(sid: str, _: None) -> None:
         lobby_id = str(uuid.uuid4())
-        client = LobbyClient(sid=sid, index=0)
+        client = LobbyClient(sid=sid, index=0, user_id=id_map[sid])
         lobbies[lobby_id] = Lobby(host=sid, lobby_id=lobby_id, microphones=[client], speakers=[], repetitions=1, delay=0, distances={})
         await sio.save_session(sid, SocketSession(lobby=lobby_id, isHost=True))
         await sio.enter_room(sid, lobby_id)
@@ -46,7 +46,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
         await sio.enter_room(sid, data.lobbyId)
         if len(lobbies[data.lobbyId].speakers) < len(lobbies[data.lobbyId].microphones):
             index = len(lobbies[data.lobbyId].speakers)
-            client = LobbyClient(sid=sid, index=index)
+            client = LobbyClient(sid=sid, index=index, user_id=id_map[sid])
             lobbies[data.lobbyId].speakers.append(client)
             await sio.emit("join_lobby_success", {
                 "deviceType": "speaker",
@@ -54,7 +54,7 @@ def register_lobby_events(sio: AsyncServer) -> None:
             },  to=sid)
         else:
             index = len(lobbies[data.lobbyId].microphones)
-            client = LobbyClient(sid=sid, index=index)
+            client = LobbyClient(sid=sid, index=index, user_id=id_map[sid])
             lobbies[data.lobbyId].microphones.append(client)
             await sio.emit("join_lobby_success", {
                 "deviceType": "microphone",
@@ -98,9 +98,9 @@ def register_lobby_events(sio: AsyncServer) -> None:
         lobby.speakers = list(filter(lambda s: s.sid != sid, lobby.speakers))
 
         if data.device == "speaker":
-            lobby.speakers.append(LobbyClient(sid=sid, index=data.index))
+            lobby.speakers.append(LobbyClient(sid=sid, index=data.index, user_id=id_map[sid]))
         else:
-            lobby.microphones.append(LobbyClient(sid=sid, index=data.index))
+            lobby.microphones.append(LobbyClient(sid=sid, index=data.index, user_id=id_map[sid]))
 
         mics = list(map(lambda m: m.index, lobby.microphones))
         speakers = list(map(lambda s: s.index, lobby.speakers))

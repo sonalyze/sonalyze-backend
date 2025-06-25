@@ -1,10 +1,11 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List
 
 
 class LobbyClient(BaseModel):
     sid: str
     index: int
+    user_id: str
 
 
 class Lobby(BaseModel):

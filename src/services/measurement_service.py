@@ -266,7 +266,8 @@ def calculate_acoustic_parameters(ir: np.ndarray[Any, np.dtype[Any]], fs: int, c
         "c50": c50_values,
         "c80": c80_values,
         "g": g_values,
-        "d50": d50_values
+        "d50": d50_values,
+        "IR" : ir
     }
 
 def analyze_acoustic_parameters(sweep_signal: np.ndarray[Any, np.dtype[Any]], recorded_signals: list[np.ndarray[Any, np.dtype[Any]]], sample_rate: int) -> list[dict[str, list[float]]]:

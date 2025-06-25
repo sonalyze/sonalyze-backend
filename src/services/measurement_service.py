@@ -11,6 +11,8 @@ from scipy.signal import sosfilt, butter, chirp
 from scipy.stats import linregress
 
 from typing import Any
+from numpy.typing import NDArray
+from models import AcousticParameters
 from socketio import AsyncServer
 from typing import List, Dict
 from sio.models import Lobby, RecordData
@@ -51,7 +53,7 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
             await asyncio.sleep(lobby.delay)
 
     await sio.emit("end_measurement", {}, to=lobby.lobby_id)
-    recorded_signals : List[np.ndarray[Any, np.dtype[Any]]] = []
+    recorded_signals : List[NDArray[np.floating]] = []
     for record in record_data:
         audio_data, sample_rate = decode_audio_data(record.recording)
         recorded_signals.append(audio_data)
@@ -76,7 +78,7 @@ def create_in(sample_rate: int) -> Any:
     t = np.linspace(0, duration, int(sample_rate * duration))
     return chirp(t, f0=20, f1=20000, t1=duration, method="logarithmic")
 
-def decode_audio_data(recording_base64: str) -> tuple[np.ndarray[Any, np.dtype[Any]], int]:
+def decode_audio_data(recording_base64: str) -> tuple[NDArray[np.floating], int]:
     """Decode base64 audio data to numpy array"""
     audio_bytes = base64.b64decode(recording_base64)
     audio_buffer = io.BytesIO(audio_bytes)
@@ -87,7 +89,7 @@ def decode_audio_data(recording_base64: str) -> tuple[np.ndarray[Any, np.dtype[A
     
     return audio_data, sample_rate
 
-def calculate_transfer_function(in_t: np.ndarray[Any, np.dtype[Any]], out_t: np.ndarray[Any, np.dtype[Any]]) -> Any:
+def calculate_transfer_function(in_t: NDArray[np.floating], out_t: NDArray[np.floating]) -> Any:
     """Calculates transferfunction from sine sweep and recorded sine sweep"""
     min_len = min(len(in_t), len(out_t))
     in_t = in_t[:min_len]
@@ -100,7 +102,7 @@ def calculate_transfer_function(in_t: np.ndarray[Any, np.dtype[Any]], out_t: np.
 
     return tf
 
-def extract_impulse_response(tf: np.ndarray[Any, np.dtype[Any]]) -> np.ndarray[Any, np.dtype[Any]] | Any:
+def extract_impulse_response(tf: NDArray[np.floating]) -> NDArray[np.floating] | Any:
     """Applies inverse fft to transfer function to get impulse response. Finds peaks at the end of ir and rolls them to the front"""
     ir = np.real(ifft(tf))
     
@@ -130,7 +132,7 @@ def extract_impulse_response(tf: np.ndarray[Any, np.dtype[Any]]) -> np.ndarray[A
     
     return ir_rotated
 
-def get_octave_band_filters(fs: int) -> tuple[np.ndarray[Any, np.dtype[Any]], list[np.ndarray[Any, np.dtype[Any]]]]:
+def get_octave_band_filters(fs: int) -> tuple[NDArray[np.floating], list[NDArray[np.floating]]]:
     """Get bands from center frequencies from 1/3 octave and calculates bandpassfilter that will be applied later"""
     center_freqs = np.array([
         100, 125, 160, 200, 250, 315, 400, 500, 630, 800,
@@ -150,7 +152,7 @@ def get_octave_band_filters(fs: int) -> tuple[np.ndarray[Any, np.dtype[Any]], li
     
     return center_freqs, filters
 
-def calculate_energy_decay(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> tuple[np.ndarray[Any, np.dtype[Any]], np.ndarray[Any, np.dtype[Any]], dict[str, int]]:
+def calculate_energy_decay(ir_filtered: NDArray[np.floating], fs: int) -> tuple[NDArray[np.floating], NDArray[np.floating], dict[str, int]]:
     """Calculates energy decay from ir and returns indices where the energy drops below -5db -10db -25db -35db """
     ir_squared = ir_filtered**2
     energy_decay = np.cumsum(ir_squared[::-1])[::-1]
@@ -166,7 +168,7 @@ def calculate_energy_decay(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int)
     
     return energy_decay_db, time_axis, indices
 
-def calculate_rt60(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any | float:
+def calculate_rt60(ir_filtered: NDArray[np.floating], fs: int) -> Any | float:
     """Calculates rt60 extrapolated from either rt30 or rt20 depending on what is available"""
     energy_decay_db, time_axis, indices = calculate_energy_decay(ir_filtered, fs)
     
@@ -192,7 +194,7 @@ def calculate_rt60(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any 
     
     return np.nan
 
-def calculate_c50(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any | float:
+def calculate_c50(ir_filtered: NDArray[np.floating], fs: int) -> Any | float:
     """Calculates C50 clarity parameter. Used for speach clarity"""
     ir_squared = ir_filtered**2
     idx_50ms = min(int(0.05 * fs), len(ir_squared) - 1)
@@ -206,7 +208,7 @@ def calculate_c50(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any |
     
     return np.nan
 
-def calculate_c80(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any | float:
+def calculate_c80(ir_filtered: NDArray[np.floating], fs: int) -> Any | float:
     """Calculates C50 clarity parameter. Used for music clarity"""
     ir_squared = ir_filtered**2
     idx_80ms = min(int(0.08 * fs), len(ir_squared) - 1)
@@ -220,7 +222,7 @@ def calculate_c80(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any |
     
     return np.nan
 
-def calculate_d50(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any | float:
+def calculate_d50(ir_filtered: NDArray[np.floating], fs: int) -> Any | float:
     """Calculates definition d50"""
     ir_squared = ir_filtered**2
     idx_50ms = min(int(0.05 * fs), len(ir_squared) - 1)
@@ -232,7 +234,7 @@ def calculate_d50(ir_filtered: np.ndarray[Any, np.dtype[Any]], fs: int) -> Any |
     
     return np.nan
 
-def calculate_g_strength(ir_filtered: np.ndarray[Any, np.dtype[Any]], ir_total_energy: float, num_bands: int) -> Any | float:
+def calculate_g_strength(ir_filtered: NDArray[np.floating], ir_total_energy: float, num_bands: int) -> Any | float:
     """Calculates strength g"""
     ir_squared = ir_filtered**2
     total_energy = np.sum(ir_squared)
@@ -243,7 +245,7 @@ def calculate_g_strength(ir_filtered: np.ndarray[Any, np.dtype[Any]], ir_total_e
     
     return np.nan
 
-def calculate_acoustic_parameters(ir: np.ndarray[Any, np.dtype[Any]], fs: int, center_freqs: np.ndarray[Any, np.dtype[Any]], filters: list[np.ndarray[Any, np.dtype[Any]]]) -> dict[str, list[float]]:
+def calculate_acoustic_parameters(ir: NDArray[np.floating], fs: int, center_freqs: NDArray[np.floating], filters: list[NDArray[np.floating]]) -> AcousticParameters:
     """Applies bandpass filter to ir and collects all parameters for ever 1/3 octave band"""
     rt60_values = []
     c50_values = []
@@ -269,16 +271,16 @@ def calculate_acoustic_parameters(ir: np.ndarray[Any, np.dtype[Any]], fs: int, c
         d50_values.append(d50)
         g_values.append(g)
 
-    return {
-        "rt60": rt60_values,
-        "c50": c50_values,
-        "c80": c80_values,
-        "g": g_values,
-        "d50": d50_values,
-        "IR" : ir
-    }
+    return AcousticParameters(
+        rt60=rt60_values,
+        c50=c50_values,
+        c80=c80_values,
+        g=g_values,
+        d50=d50_values,
+        ir=ir.tolist()
+    )
 
-def analyze_acoustic_parameters(sweep_signal: np.ndarray[Any, np.dtype[Any]], recorded_signals: list[np.ndarray[Any, np.dtype[Any]]], sample_rate: int) -> list[dict[str, list[float]]]:
+def analyze_acoustic_parameters(sweep_signal: NDArray[np.floating], recorded_signals: list[NDArray[np.floating]], sample_rate: int) -> list[AcousticParameters]:
     """Returns results for every mic speaker configuration"""
     results = []
     

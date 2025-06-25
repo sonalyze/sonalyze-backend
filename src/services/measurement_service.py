@@ -8,6 +8,7 @@ from sio.models import Lobby, RecordData
 lobbies: Dict[str, Lobby] = {}
 measurement_tasks: dict[str, asyncio.Task] = {} # type: ignore
 measurement_queues: dict[str, asyncio.Queue[RecordData]] = {}
+id_map: dict[str, str] = {} # maps sid to user_id
 
 logger = logging.getLogger("uvicorn.info")
 

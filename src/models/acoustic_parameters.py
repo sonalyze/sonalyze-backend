@@ -7,3 +7,4 @@ class AcousticParameters(BaseModel):
     c80: List[float] = Field(..., title="C80", description="C80 values for different frequencies in decibels")
     g: List[float] = Field(..., title="G", description="G values for different frequencies in decibels")
     d50: List[float] = Field(..., title="D50", description="D50 values for different frequencies in decibels")
+    ir: List[float] = Field(..., title="IR", description="Impulse response of the measurement")

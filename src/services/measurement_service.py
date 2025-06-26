@@ -9,7 +9,6 @@ from numpy.typing import NDArray
 
 from database.engine import DataContext
 from database.schemas.measurement_db import MeasurementDbModel
-from models import AcousticParameters
 from socketio import AsyncServer
 from typing import List, Dict
 from sio.models import Lobby, RecordData

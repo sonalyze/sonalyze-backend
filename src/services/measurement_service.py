@@ -76,9 +76,6 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
         await sio.emit("results", {"results": serializable}, to=lobby.lobby_id)
     except Exception as e:
         logger.error(e)
-    else:
-        logger.info("emit results")
-
 
     measurement = MeasurementDbModel(
         values=results,
@@ -94,21 +91,16 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
             logger.info(f"User {mic.user_id} not found")
         else:
             user.measurements.append(str(measurement.id))
-            logger.info("append measurement")
             await ctx.users.save(user)
-            logger.info("saved user")
 
 
     for speaker in lobby.speakers:
-        logger.info("add db speaker")
         user = await ctx.users.find_one_by_id(ObjectId(speaker.user_id))
         if user is None:
             logger.info(f"User {speaker.user_id} not found")
         else:
             user.measurements.append(str(measurement.id))
-            logger.info("append measurement")
             await ctx.users.save(user)
-            logger.info("saved user")
 
 
     await sio.close_room(lobby.lobby_id)

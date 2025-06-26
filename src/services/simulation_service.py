@@ -5,9 +5,9 @@ import pyroomacoustics as pra
 import numpy as np
 import logging
 from services import get_material
+from services.analysis_service import get_octave_band_filters, calculate_acoustic_parameters
 
 logger = logging.getLogger("uvicorn.info")
-
 
 async def simulate_room(
     room_scene: RestRoomScene, db: DataContext
@@ -29,9 +29,9 @@ async def simulate_room(
         room_scene.dimensions.depth,
         room_scene.dimensions.height,
     ]  # Breite, Tiefe, Höhe
-
+    sample_rate = 48000
     room = pra.ShoeBox(
-        room_dim, fs=48000, materials=materials, max_order=10
+        room_dim, fs=sample_rate, materials=materials, max_order=10
     )  # Standardabsorption mit genauen Materialien ersetzen
 
     for speaker in room_scene.speakers:
@@ -46,16 +46,22 @@ async def simulate_room(
         ]
     )
 
-    room.add_microphone_array(pra.MicrophoneArray(mic_positions, fs=48000))
+    room.add_microphone_array(pra.MicrophoneArray(mic_positions, fs=sample_rate))
 
     room.compute_rir()
     if room.rir is None:
         raise RuntimeError(
             "Raum konnte nicht simmuliert werden – eventuell ist das Setup fehlerhaft."
         )
+    results = []
+    center_freqs, filters = get_octave_band_filters(sample_rate)
     for mic_index, mic_rirs in enumerate(room.rir):
+        results_mic = []
         for source_index, rir in enumerate(mic_rirs):
-            print(rir)
+            mic_results = calculate_acoustic_parameters(rir, sample_rate, center_freqs, filters)
+            results_mic.append(mic_results)
+        results.append(results_mic)
             # rir ist Impulsantwort die weiterverarbeitet werden muss
             # Verarbeiten der Impulsantwort einfügen
-    return None
+
+    return Simulation(roomId=room_scene.roomId,values=results)

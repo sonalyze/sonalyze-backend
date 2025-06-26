@@ -27,18 +27,22 @@ logger = logging.getLogger("uvicorn.info")
 async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     await sio.emit("start_measurement", {}, to=lobby.lobby_id)
     measurement_queues[lobby.lobby_id] = asyncio.Queue()
-    await asyncio.sleep(1)
+    await asyncio.sleep(4)
     data_list: List[List[RecordData]] = []
 
     for i in range(lobby.repetitions):
         logger.info(f"measurement cycle {i} for lobby {lobby.lobby_id} started")
-        await sio.emit("start_recording", {}, to=lobby.lobby_id)
+        for mic in lobby.microphones:
+            await sio.emit("start_recording", {}, to=mic.sid)
+
         await asyncio.sleep(1)
         for speaker in lobby.speakers:
             await sio.emit("play_sound", {}, to=speaker.sid)
             await asyncio.sleep(1)
 
-        await sio.emit("end_recording", {}, to=lobby.lobby_id)
+        for mic in lobby.microphones:
+            logger.info("ahhh")
+            await sio.emit("end_recording", {}, to=mic.sid)
 
         record_data: List[RecordData] = []
 

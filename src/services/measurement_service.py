@@ -2,15 +2,16 @@ import asyncio
 import logging
 
 import numpy as np
-from services.analysis_service import decode_audio_data, create_in, analyze_acoustic_parameters
-
 from bson import ObjectId
+
 from numpy.typing import NDArray
 
 from database.engine import DataContext
 from database.schemas.measurement_db import MeasurementDbModel
 from socketio import AsyncServer
 from typing import List, Dict
+
+from services.analysis_service import analyze_acoustic_parameters, create_in, decode_audio_data
 from sio.models import Lobby, RecordData
 
 lobbies: Dict[str, Lobby] = {}
@@ -68,12 +69,19 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results")
+
+    measurement = MeasurementDbModel(
+        values=results,
+        ownerToken=lobby.microphones[0].user_id,
+        name="Measurement",
+    )
+
     try:
         serializable = [
             [param.model_dump() for param in cycle]
             for cycle in results
         ]
-        await sio.emit("results", {"results": serializable}, to=lobby.lobby_id)
+        await sio.emit("results", {"results": serializable, "id": str(measurement.id), "name": measurement.name}, to=lobby.lobby_id)
     except Exception as e:
         logger.error(e)
 

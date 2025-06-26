@@ -77,7 +77,11 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results: {results}")
     try:
-        await sio.emit("results", {"results": results}, to=lobby.lobby_id)
+        serializable = [
+            [param.model_dump() for param in cycle]
+            for cycle in results
+        ]
+        await sio.emit("results", {"results": serializable}, to=lobby.lobby_id)
     except Exception as e:
         logger.error(e)
     else:

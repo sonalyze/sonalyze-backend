@@ -5,6 +5,7 @@ from socketio import AsyncServer
 from typing import cast, Dict
 import asyncio
 
+from database.engine import get_db
 from services.measurement_service import measurement_controller, lobbies, measurement_tasks, measurement_queues
 from sio.models import SocketSession, RecordData
 
@@ -47,7 +48,8 @@ def register_measurement_events(sio: AsyncServer) -> None:
             await sio.emit("start_measurement_fail", {"reason": "Not enough microphones!"})
             return
 
-        task = asyncio.create_task(measurement_controller(sio, lobby=lobbies[session.lobby]))
+        ctx = next(get_db())
+        task = asyncio.create_task(measurement_controller(sio, lobby=lobbies[session.lobby]), ctx=ctx)
         measurement_tasks[session.lobby] = task
         logger.info(f"Started measurement for lobby {session.lobby}")
 

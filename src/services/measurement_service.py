@@ -14,7 +14,7 @@ from scipy.stats import linregress
 from typing import Any
 from numpy.typing import NDArray
 
-from database.engine import data_context
+from database.engine import DataContext
 from database.schemas.measurement_db import MeasurementDbModel
 from models import AcousticParameters
 from socketio import AsyncServer
@@ -28,7 +28,7 @@ id_map: dict[str, str] = {} # maps sid to user_id
 
 logger = logging.getLogger("uvicorn.info")
 
-async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
+async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContext) -> None:
     await sio.emit("start_measurement", {}, to=lobby.lobby_id)
     measurement_queues[lobby.lobby_id] = asyncio.Queue()
     await asyncio.sleep(4)
@@ -75,9 +75,14 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
 
     await asyncio.sleep(2)
-    logger.info(f"Lobby {lobby.lobby_id} measurement results: {data_list}")
-    await sio.emit("results", {results: results}, to=lobby.lobby_id)
-    logger.info("emit results")
+    logger.info(f"Lobby {lobby.lobby_id} measurement results: {results}")
+    try:
+        await sio.emit("results", {"results": results}, to=lobby.lobby_id)
+    except Exception as e:
+        logger.error(e)
+    else:
+        logger.info("emit results")
+
 
     measurement = MeasurementDbModel(
         values=results,
@@ -86,28 +91,28 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     )
     logger.info("created db object")
 
-    await data_context.measurements.save(measurement)
+    await ctx.measurements.save(measurement)
     logger.info("saved db object")
 
     for mic in lobby.microphones:
         logger.info("add db mic")
-        user = await data_context.users.find_one_by_id(mic.user_id)
+        user = await ctx.users.find_one_by_id(mic.user_id)
         logger.info("found user")
         assert user is not None
         user.measurements.append(str(measurement.id))
         logger.info("append measurement")
-        await data_context.users.save(user)
+        await ctx.users.save(user)
         logger.info("saved user")
 
 
     for speaker in lobby.speakers:
         logger.info("add db speaker")
-        user = await data_context.users.find_one_by_id(speaker.user_id)
+        user = await ctx.users.find_one_by_id(speaker.user_id)
         logger.info("found user")
         assert user is not None
         user.measurements.append(str(measurement.id))
         logger.info("append measurement")
-        await data_context.users.save(user)
+        await ctx.users.save(user)
         logger.info("saved user")
 
 

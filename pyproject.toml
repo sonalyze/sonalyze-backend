@@ -7,6 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.115.12",
     "library>=3.0.91",
+    "librosa>=0.11.0",
+    "matplotlib>=3.10.3",
     "mypy>=1.15.0",
     "pydantic-mongo>=3.1.0",
     "pyroomacoustics>=0.8.4",

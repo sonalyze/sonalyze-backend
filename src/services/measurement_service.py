@@ -76,20 +76,23 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results")
-    try:
-        serializable = [
-            [param.model_dump() for param in cycle]
-            for cycle in results
-        ]
-        await sio.emit("results", {"results": serializable}, to=lobby.lobby_id)
-    except Exception as e:
-        logger.error(e)
 
     measurement = MeasurementDbModel(
         values=results,
         ownerToken=lobby.microphones[0].user_id,
         name="Measurement",
     )
+
+    try:
+        serializable = [
+            [param.model_dump() for param in cycle]
+            for cycle in results
+        ]
+        await sio.emit("results", {"results": serializable, "id": str(measurement.id), "name": measurement.name}, to=lobby.lobby_id)
+    except Exception as e:
+        logger.error(e)
+
+
 
     await ctx.measurements.save(measurement)
 
@@ -322,7 +325,7 @@ def calculate_acoustic_parameters(ir: NDArray[np.floating], fs: int, center_freq
         c80=c80_values,
         g=g_values,
         d50=d50_values,
-        ir=ir.tolist()
+        ir=[] # TODO to many values rn
     )
 
 def analyze_acoustic_parameters(sweep_signal: NDArray[np.floating], recorded_signals_cycles: list[list[NDArray[np.floating]]], sample_rate: int) -> list[list[AcousticParameters]]:

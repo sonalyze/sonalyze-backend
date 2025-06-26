@@ -14,7 +14,7 @@ from scipy.stats import linregress
 from typing import Any
 from numpy.typing import NDArray
 
-from database.engine import ctx, DataContext
+from database.engine import DataContext
 from database.schemas.measurement_db import MeasurementDbModel
 from models import AcousticParameters
 from socketio import AsyncServer

@@ -1,27 +1,42 @@
 import logging
 
 import socketio
+from bson import ObjectId
 
-from services.measurement_service import measurement_tasks, lobbies, measurement_queues
+from services.measurement_service import measurement_tasks, lobbies, measurement_queues, id_map
 from .events.lobby_events import register_lobby_events
 from .events.measurement_events import register_measurement_events
 from typing import cast
 
 from .models import SocketSession
 
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*', max_http_buffer_size=5*1024*1024)
 app = socketio.ASGIApp(sio, static_files=None)
 
 logger = logging.getLogger("uvicorn.info")
 
 @sio.event # type: ignore
-async def connect(sid, environ) -> None:
-    logger.info(f"Connected {sid}")
+async def connect(sid, environ, auth) -> None:
+    if not auth:
+        logger.info(f"Refused {sid} because of missing user_id")
+        await sio.disconnect(sid)
+        return
+
+    token = auth["token"]
+    if not ObjectId.is_valid(token):
+        logger.info(f"Refused {sid} because of invalid user_id")
+        await sio.disconnect(sid)
+        return
+    id_map[sid] = token
+    logger.info(f"Connected {sid} with user_id {token}")
 
 @sio.event # type: ignore
 async def disconnect(sid, reason) -> None:
     logger.info(f"Disconnected {sid}")
     session = cast(SocketSession, await sio.get_session(sid))
+    if sid in id_map:
+        del id_map[sid]
+
     if hasattr(session, 'lobby'):
         if session.lobby in measurement_tasks.keys():
             measurement_tasks[session.lobby].cancel()

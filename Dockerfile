@@ -1,4 +1,8 @@
 FROM ghcr.io/astral-sh/uv:debian
+
+RUN apt-get update
+RUN apt-get install ffmpeg -y
+
 WORKDIR /app
 ADD . /app
 

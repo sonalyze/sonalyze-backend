@@ -49,7 +49,7 @@ def register_measurement_events(sio: AsyncServer) -> None:
             return
 
         ctx = next(get_db())
-        task = asyncio.create_task(measurement_controller(sio, lobby=lobbies[session.lobby]), ctx=ctx)
+        task = asyncio.create_task(measurement_controller(sio, lobby=lobbies[session.lobby], ctx=ctx))
         measurement_tasks[session.lobby] = task
         logger.info(f"Started measurement for lobby {session.lobby}")
 

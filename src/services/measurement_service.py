@@ -75,9 +75,14 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
     results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
 
     await asyncio.sleep(2)
-    logger.info(f"Lobby {lobby.lobby_id} measurement results: {data_list}")
-    await sio.emit("results", {results: results}, to=lobby.lobby_id)
-    logger.info("emit results")
+    logger.info(f"Lobby {lobby.lobby_id} measurement results: {results}")
+    try:
+        await sio.emit("results", {"results": results}, to=lobby.lobby_id)
+    except Exception as e:
+        logger.error(e)
+    else:
+        logger.info("emit results")
+
 
     measurement = MeasurementDbModel(
         values=results,

@@ -212,6 +212,10 @@ async def do_simulation(
     if room_scene is None:
         raise HTTPException(status_code=404, detail="Room scene not found")
     result = await simulate_room(room_scene, data_context)
+    if result is None:
+        raise HTTPException(status_code=400, detail="Room simulation failed")
+
+
 
     room = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
     if not room:

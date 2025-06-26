@@ -76,7 +76,7 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results: {data_list}")
-    await sio.emit("results", results, to=lobby.lobby_id)
+    await sio.emit("results", {results: results}, to=lobby.lobby_id)
     logger.info("emit results")
 
     measurement = MeasurementDbModel(

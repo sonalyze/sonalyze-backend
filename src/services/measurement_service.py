@@ -5,6 +5,7 @@ import numpy as np
 import base64
 import io
 import soundfile as sf
+from bson import ObjectId
 
 from scipy.fft import fft, ifft
 from scipy.signal import sosfilt, butter, chirp
@@ -12,6 +13,9 @@ from scipy.stats import linregress
 
 from typing import Any
 from numpy.typing import NDArray
+
+from database.engine import data_context
+from database.schemas.measurement_db import MeasurementDbModel
 from models import AcousticParameters
 from socketio import AsyncServer
 from typing import List, Dict
@@ -46,7 +50,7 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
         record_data: List[RecordData] = []
 
         logger.info(f"Lobby {lobby.lobby_id} waiting for recorded data...")
-        while len(record_data) < len(measurement_queues):
+        while len(record_data) < len(lobby.microphones):
             data = await measurement_queues[lobby.lobby_id].get()
 
             record_data.append(data)
@@ -72,6 +76,27 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results: {data_list}")
+
+    measurement = MeasurementDbModel(
+        values=results,
+        ownerToken=lobby.microphones[0].user_id,
+        name="Measurement",
+    )
+
+    await data_context.measurements.save(measurement)
+
+    for mic in lobby.microphones:
+        user = await data_context.users.find_one_by_id(mic.user_id)
+        assert user is not None
+        user.measurements.append(str(measurement.id))
+        await data_context.users.save(user)
+
+    for speaker in lobby.speakers:
+        user = await data_context.users.find_one_by_id(speaker.user_id)
+        assert user is not None
+        user.measurements.append(str(measurement.id))
+        await data_context.users.save(user)
+
     await sio.emit("results", results, to=lobby.lobby_id)
     await sio.close_room(lobby.lobby_id)
     lobbies.pop(lobby.lobby_id)

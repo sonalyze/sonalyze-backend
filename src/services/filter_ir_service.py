@@ -1,3 +1,4 @@
+from matplotlib.figure import Figure
 import numpy as np
 import librosa
 import matplotlib.pyplot as plt
@@ -5,14 +6,20 @@ import soundfile as sf
 from scipy.fft import fft, ifft
 from scipy.signal import lfilter
 from scipy.signal.windows import tukey
-from scipy.ndimage import (
-    gaussian_filter1d,
-)
+from scipy.ndimage import gaussian_filter1d
+from typing import Any, cast
+from numpy.typing import NDArray
+
 
 # === Hilfsfunktionen ===
 
 
-def calculate_transfer_function(in_t, out_t, fs, sr):
+def calculate_transfer_function(
+    in_t: NDArray[np.float64],
+    out_t: NDArray[np.float64],
+    fs: int,
+    sr: int,
+) -> NDArray[np.complex128]:
     # Berechnet die Übertragungsfunktion aus einem Ein- und Ausgangssignal.
     min_len = min(len(in_t), len(out_t))  # Angleichen der Länge
     # Zeitversetzt da die verwendete Testaufnahme nicht mit dem sweep beginnt
@@ -33,12 +40,15 @@ def calculate_transfer_function(in_t, out_t, fs, sr):
 
     # Übertragungsfunktion: Quotient von Ausgang zu Eingang
     tf = out_f / in_f
-    return tf
+    return cast(NDArray[np.complex128], tf)
 
 
-def extract_impulse_response_alt(tf, fs):
+def extract_impulse_response_alt(
+    tf: NDArray[np.complex128], fs: int
+) -> NDArray[np.floating] | Any:
     # Extrahiert eine Impulsantwort aus einer Übertragungsfunktion.
     ir = np.real(ifft(tf))  # Rücktransformation in den Zeitbereich
+    ir = cast(NDArray[np.float64], ir)
     threshold = 1e-7 * np.max(np.abs(ir))  # Schwellenwert zur Begrenzung der Länge
 
     # Ende der relevanten Impulsantwort finden
@@ -63,15 +73,21 @@ def extract_impulse_response_alt(tf, fs):
     return np.roll(ir, -start_idx)  # Beginn der IR an den Anfang schieben
 
 
-def trim_ir(ir, max_length=2048):
+def trim_ir(
+    ir: NDArray[np.floating] | Any, max_length: int = 2048
+) -> NDArray[np.float64] | Any:
     # Beschneidet eine Impulsantwort um das Maximum herum auf eine definierte Länge da selbst berechnete antwort länger.
-    peak = np.argmax(np.abs(ir))
+    peak = int(np.argmax(np.abs(ir)))
     start = max(0, peak - max_length // 2)
     end = start + max_length
     return ir[start:end]
 
 
-def visualize_impulse_response(ir_data, fs, title="Impulse Response Analysis"):
+def visualize_impulse_response(
+    ir_data: NDArray[np.floating] | Any,
+    fs: int,
+    title: str = "Impulse Response Analysis",
+) -> Figure:
     # Visualisiert die Impulsantwort im Zeit-, Energie- und Frequenzbereich.
     fig, axes = plt.subplots(3, 1, figsize=(12, 10))
     time_axis = np.arange(len(ir_data)) / fs
@@ -104,24 +120,31 @@ def visualize_impulse_response(ir_data, fs, title="Impulse Response Analysis"):
 
 
 # === Hauptprogramm ===
-def main():
-    sr = 48000  # Samplingrate
+def main() -> None:
+    sr = 48000  # Samplingrate als int
 
     # === 1. Lade Ein- und Ausgangssignal des Sweep-Experiments ===
-    in_t, sr = librosa.load("../../ressources/uncut_direktional_1.wav", sr=None)
-    out_t, sr = librosa.load("../../ressources/sweep_ausgangs_datei.wav", sr=sr)
+    in_t, sr_in = librosa.load("../../ressources/uncut_direktional_1.wav", sr=None)
+    out_t, sr_out = librosa.load(
+        "../../ressources/sweep_ausgangs_datei.wav", sr=int(sr_in)
+    )
+    sr_in = int(sr_in)
+    sr_out = int(sr_out)
+
+    if sr_in != sr_out:
+        raise ValueError("Samplingraten stimmen nicht überein")
 
     # === 2. Berechne Übertragungsfunktion und extrahiere Impulsantwort ===
-    tf = calculate_transfer_function(in_t, out_t, sr, sr)
-    ir = extract_impulse_response_alt(tf, sr)
+    tf = calculate_transfer_function(in_t, out_t, sr_in, sr_in)
+    ir = extract_impulse_response_alt(tf, sr_in)
 
     # === 3. Analysiere Impulsantwort visuell erster Plot ===
-    visualize_impulse_response(ir, sr, "Impulse Response (direktional)")
+    visualize_impulse_response(ir, sr_in, "Impulse Response (direktional)")
     plt.show()
 
     # === 4. Lade omnidirektionale IR, beschneide beide IRs auf gleiche Länge ===
     h_omni, _ = librosa.load(
-        "../../ressources/impulsresponse_omnidirektional.wav", sr=sr
+        "../../ressources/impulsresponse_omnidirektional.wav", sr=sr_in
     )
     h_dir = trim_ir(ir)
     h_omni = trim_ir(h_omni)
@@ -145,7 +168,7 @@ def main():
     h_corr = np.fft.irfft(H_corr)
 
     # === 7. Lade Testsignal (ungerichtetes Mikrofonsignal) und filtere es ===
-    y_test, _ = librosa.load("../../ressources/uncut_direktional_1.wav", sr=sr)
+    y_test, _ = librosa.load("../../ressources/uncut_direktional_1.wav", sr=sr_in)
     filtered = lfilter(h_corr, [1.0], y_test)  # Faltung im Zeitbereich
 
     # === 8. Vergleiche Frequenzgänge vor und nach Filterung ===
@@ -153,7 +176,7 @@ def main():
     S_filtered = np.abs(np.fft.rfft(filtered))
     S_test /= np.max(S_test)  # Normalisieren für besseren Vergleich
     S_filtered /= np.max(S_filtered)
-    freqs_test = np.fft.rfftfreq(len(y_test), 1 / sr)
+    freqs_test = np.fft.rfftfreq(len(y_test), 1 / sr_in)
 
     # Leider keine vergleichs Omnidatei zum Anzeigen und überprüfen
     plt.figure(figsize=(8, 6))

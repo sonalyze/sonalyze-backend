@@ -7,8 +7,6 @@ import logging
 from services import get_material
 from services.analysis_service import get_octave_band_filters, calculate_acoustic_parameters
 
-from models import AcousticParameters
-
 logger = logging.getLogger("uvicorn.info")
 
 async def simulate_room(

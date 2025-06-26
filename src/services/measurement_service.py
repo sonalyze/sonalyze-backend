@@ -4,9 +4,7 @@ import logging
 import numpy as np
 from services.analysis_service import decode_audio_data, create_in, analyze_acoustic_parameters
 
-from typing import Any
 from numpy.typing import NDArray
-from models import AcousticParameters
 from socketio import AsyncServer
 from typing import List, Dict
 from sio.models import Lobby, RecordData

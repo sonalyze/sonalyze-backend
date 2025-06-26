@@ -84,20 +84,31 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
     )
 
     await data_context.measurements.save(measurement)
+    await sio.emit("results", results, to=lobby.lobby_id)
+    logger.info("emit results")
 
     for mic in lobby.microphones:
+        logger.info("add db mic")
         user = await data_context.users.find_one_by_id(mic.user_id)
+        logger.info("found user")
         assert user is not None
         user.measurements.append(str(measurement.id))
+        logger.info("append measurement")
         await data_context.users.save(user)
+        logger.info("saved user")
+
 
     for speaker in lobby.speakers:
+        logger.info("add db speaker")
         user = await data_context.users.find_one_by_id(speaker.user_id)
+        logger.info("found user")
         assert user is not None
         user.measurements.append(str(measurement.id))
+        logger.info("append measurement")
         await data_context.users.save(user)
+        logger.info("saved user")
 
-    await sio.emit("results", results, to=lobby.lobby_id)
+
     await sio.close_room(lobby.lobby_id)
     lobbies.pop(lobby.lobby_id)
     measurement_queues.pop(lobby.lobby_id)

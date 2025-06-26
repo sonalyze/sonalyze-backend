@@ -2,21 +2,12 @@ import asyncio
 import logging
 
 import numpy as np
-import base64
-import io
-import soundfile as sf
 from bson import ObjectId
 
-from scipy.fft import fft, ifft
-from scipy.signal import sosfilt, butter, chirp
-from scipy.stats import linregress
-
-from typing import Any
 from numpy.typing import NDArray
 
 from database.engine import DataContext
 from database.schemas.measurement_db import MeasurementDbModel
-from models import AcousticParameters
 from socketio import AsyncServer
 from typing import List, Dict
 

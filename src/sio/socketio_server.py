@@ -10,7 +10,7 @@ from typing import cast
 
 from .models import SocketSession
 
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*', max_http_buffer_size=5*1024*1024)
 app = socketio.ASGIApp(sio, static_files=None)
 
 logger = logging.getLogger("uvicorn.info")

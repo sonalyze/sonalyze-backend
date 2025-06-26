@@ -5,12 +5,14 @@ from fastapi import APIRouter, HTTPException
 from typing import List, Annotated
 
 from fastapi.params import Depends
+from rich.measure import Measurement
 
 from api.models.post_models import UpdateRoom, CreateRoom, UpdateScene
 from api.models.room import Room
 from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
 from database.engine import DataContext, get_db
+from database.schemas.measurement_db import MeasurementDbModel
 from database.schemas.room_db import RoomDbModel
 from services.auth_service import get_token_header, HttpObjectId
 from services.mapper_service import (
@@ -210,4 +212,15 @@ async def do_simulation(
     if room_scene is None:
         raise HTTPException(status_code=404, detail="Room scene not found")
     result = await simulate_room(room_scene, data_context)
+    if result is None:
+        raise HTTPException(status_code=400, detail="Room simulation failed")
+
+
+
+    room = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    room.simulation = result.values
+    await data_context.rooms.save(room)
+
     return result

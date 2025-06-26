@@ -75,7 +75,7 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
     results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
 
     await asyncio.sleep(2)
-    logger.info(f"Lobby {lobby.lobby_id} measurement results: {results}")
+    logger.info(f"Lobby {lobby.lobby_id} measurement results")
     try:
         serializable = [
             [param.model_dump() for param in cycle]
@@ -93,31 +93,30 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
         ownerToken=lobby.microphones[0].user_id,
         name="Measurement",
     )
-    logger.info("created db object")
 
     await ctx.measurements.save(measurement)
-    logger.info("saved db object")
 
     for mic in lobby.microphones:
-        logger.info("add db mic")
-        user = await ctx.users.find_one_by_id(mic.user_id)
-        logger.info("found user")
-        assert user is not None
-        user.measurements.append(str(measurement.id))
-        logger.info("append measurement")
-        await ctx.users.save(user)
-        logger.info("saved user")
+        user = await ctx.users.find_one_by_id(ObjectId(mic.user_id))
+        if user is None:
+            logger.info(f"User {mic.user_id} not found")
+        else:
+            user.measurements.append(str(measurement.id))
+            logger.info("append measurement")
+            await ctx.users.save(user)
+            logger.info("saved user")
 
 
     for speaker in lobby.speakers:
         logger.info("add db speaker")
-        user = await ctx.users.find_one_by_id(speaker.user_id)
-        logger.info("found user")
-        assert user is not None
-        user.measurements.append(str(measurement.id))
-        logger.info("append measurement")
-        await ctx.users.save(user)
-        logger.info("saved user")
+        user = await ctx.users.find_one_by_id(ObjectId(speaker.user_id))
+        if user is None:
+            logger.info(f"User {speaker.user_id} not found")
+        else:
+            user.measurements.append(str(measurement.id))
+            logger.info("append measurement")
+            await ctx.users.save(user)
+            logger.info("saved user")
 
 
     await sio.close_room(lobby.lobby_id)

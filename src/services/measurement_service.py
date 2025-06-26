@@ -14,7 +14,7 @@ from scipy.stats import linregress
 from typing import Any
 from numpy.typing import NDArray
 
-from database.engine import data_context, DataContext
+from database.engine import ctx, DataContext
 from database.schemas.measurement_db import MeasurementDbModel
 from models import AcousticParameters
 from socketio import AsyncServer
@@ -91,28 +91,28 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
     )
     logger.info("created db object")
 
-    await data_context.measurements.save(measurement)
+    await ctx.measurements.save(measurement)
     logger.info("saved db object")
 
     for mic in lobby.microphones:
         logger.info("add db mic")
-        user = await data_context.users.find_one_by_id(mic.user_id)
+        user = await ctx.users.find_one_by_id(mic.user_id)
         logger.info("found user")
         assert user is not None
         user.measurements.append(str(measurement.id))
         logger.info("append measurement")
-        await data_context.users.save(user)
+        await ctx.users.save(user)
         logger.info("saved user")
 
 
     for speaker in lobby.speakers:
         logger.info("add db speaker")
-        user = await data_context.users.find_one_by_id(speaker.user_id)
+        user = await ctx.users.find_one_by_id(speaker.user_id)
         logger.info("found user")
         assert user is not None
         user.measurements.append(str(measurement.id))
         logger.info("append measurement")
-        await data_context.users.save(user)
+        await ctx.users.save(user)
         logger.info("saved user")
 
 

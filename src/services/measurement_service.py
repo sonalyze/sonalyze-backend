@@ -38,10 +38,9 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
         await asyncio.sleep(1)
         for speaker in lobby.speakers:
             await sio.emit("play_sound", {}, to=speaker.sid)
-            await asyncio.sleep(1)
+            await asyncio.sleep(6)
 
         for mic in lobby.microphones:
-            logger.info("ahhh")
             await sio.emit("end_recording", {}, to=mic.sid)
 
         record_data: List[RecordData] = []

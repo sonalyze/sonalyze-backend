@@ -76,16 +76,18 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results: {data_list}")
+    await sio.emit("results", results, to=lobby.lobby_id)
+    logger.info("emit results")
 
     measurement = MeasurementDbModel(
         values=results,
         ownerToken=lobby.microphones[0].user_id,
         name="Measurement",
     )
+    logger.info("created db object")
 
     await data_context.measurements.save(measurement)
-    await sio.emit("results", results, to=lobby.lobby_id)
-    logger.info("emit results")
+    logger.info("saved db object")
 
     for mic in lobby.microphones:
         logger.info("add db mic")

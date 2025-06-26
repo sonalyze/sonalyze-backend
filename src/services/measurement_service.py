@@ -14,7 +14,7 @@ from scipy.stats import linregress
 from typing import Any
 from numpy.typing import NDArray
 
-from database.engine import data_context
+from database.engine import data_context, DataContext
 from database.schemas.measurement_db import MeasurementDbModel
 from models import AcousticParameters
 from socketio import AsyncServer
@@ -28,7 +28,7 @@ id_map: dict[str, str] = {} # maps sid to user_id
 
 logger = logging.getLogger("uvicorn.info")
 
-async def measurement_controller(sio: AsyncServer, lobby: Lobby) -> None:
+async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContext) -> None:
     await sio.emit("start_measurement", {}, to=lobby.lobby_id)
     measurement_queues[lobby.lobby_id] = asyncio.Queue()
     await asyncio.sleep(4)

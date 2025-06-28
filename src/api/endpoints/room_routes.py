@@ -1,19 +1,20 @@
 import logging
 from datetime import datetime
 
-from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from typing import List, Annotated
 
 from fastapi.params import Depends
+from rich.measure import Measurement
 
 from api.models.post_models import UpdateRoom, CreateRoom, UpdateScene
 from api.models.room import Room
 from api.models.room_scene import RestRoomScene
 from api.models.simulation import Simulation
 from database.engine import DataContext, get_db
+from database.schemas.measurement_db import MeasurementDbModel
 from database.schemas.room_db import RoomDbModel
-from services.auth_service import get_token_header
+from services.auth_service import get_token_header, HttpObjectId
 from services.mapper_service import (
     map_room_db_to_room,
     map_room_db_to_rest_room_scene,
@@ -22,7 +23,7 @@ from services.mapper_service import (
 )
 from services.simulation_service import simulate_room
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.info")
 
 router = APIRouter()
 
@@ -35,11 +36,11 @@ async def get_rooms(
     """
     Get general info about all rooms of the calling user.
     """
-    user = await data_context.users.find_one_by_id(ObjectId(token))
+    user = await data_context.users.find_one_by_id(HttpObjectId(token))
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    room_ids = [ObjectId(s) for s in user.rooms]
+    room_ids = [HttpObjectId(s) for s in user.rooms]
     rooms_db = await data_context.rooms.find_by({"_id": {"$in": room_ids}})
     rooms: List[Room] = []
     for room_db in rooms_db:
@@ -57,7 +58,7 @@ async def delete_room(
     """
     Delete a room owned by the calling user.
     """
-    room = await data_context.rooms.find_one_by_id(ObjectId(room_id))
+    room = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
     if not room.ownerToken == token:
@@ -78,7 +79,7 @@ async def create_room(
         name=body.name, ownerToken=token, room=body.scene
     )
     await data_context.rooms.save(room_db)
-    user = await data_context.users.find_one_by_id(ObjectId(token))
+    user = await data_context.users.find_one_by_id(HttpObjectId(token))
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
     user.rooms.append(str(room_db.id))
@@ -98,7 +99,7 @@ async def update_room(
     Update the general info of a room.
     Requires ownership of the room.
     """
-    room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
+    room_db = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
     if not room_db:
         raise HTTPException(status_code=404, detail="Room not found")
     if not room_db.ownerToken == token:
@@ -109,6 +110,46 @@ async def update_room(
     await data_context.rooms.save(room_db)
 
 
+@router.get("/imported/{room_id}", tags=["room"])
+async def import_room(
+    room_id: str,
+    token: Annotated[str, Depends(get_token_header)],
+    data_context: Annotated[DataContext, Depends(get_db)],
+) -> Room | None:
+    """
+    Get a certain room based on its ID.
+    Adds the room to the current user's history.
+    """
+    room_db = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
+    if not room_db:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    user_db = await data_context.users.find_one_by_id(HttpObjectId(token))
+    assert user_db is not None
+    if room_id not in user_db.rooms:
+        user_db.rooms.append(str(room_db.id))
+        await data_context.users.save(user_db)
+
+    return map_room_db_to_room(room_db, token)
+
+
+@router.delete("/imported/{room_id}", tags=["room"])
+async def remove_imported_room(
+    room_id: str,
+    token: Annotated[str, Depends(get_token_header)],
+    data_context: Annotated[DataContext, Depends(get_db)],
+) -> None:
+    """
+    Remove a room from the current user's history.
+    """
+
+    user_db = await data_context.users.find_one_by_id(HttpObjectId(token))
+    assert user_db is not None
+    if room_id in user_db.rooms:
+        user_db.rooms.remove(str(room_id))
+        await data_context.users.save(user_db)
+
+
 @router.get("/{room_id}/scene", response_model=RestRoomScene, tags=["scene"])
 async def get_room_scene(
     room_id: str, data_context: Annotated[DataContext, Depends(get_db)]
@@ -116,7 +157,7 @@ async def get_room_scene(
     """
     Get the 3D-Scene of the given room.
     """
-    room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
+    room_db = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
     if not room_db or not room_db.room:
         raise HTTPException(status_code=404, detail="Room not found")
 
@@ -134,7 +175,7 @@ async def update_room_scene(
     Update the 3D-Scene of the given room.
     Requires ownership of the room.
     """
-    room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
+    room_db = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
     if not room_db or not room_db.room:
         raise HTTPException(status_code=404, detail="Room not found")
     if not room_db.ownerToken == token:
@@ -154,7 +195,7 @@ async def get_simulation_result(
     """
     Get the existing simulation result of a room.
     """
-    room_db = await data_context.rooms.find_one_by_id(ObjectId(room_id))
+    room_db = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
     if not room_db or not room_db.simulation:
         raise HTTPException(status_code=404, detail="Room not found")
 
@@ -170,4 +211,16 @@ async def do_simulation(
     room_scene: RestRoomScene | None = await get_room_scene(room_id, data_context)
     if room_scene is None:
         raise HTTPException(status_code=404, detail="Room scene not found")
-    return simulate_room(room_scene)
+    result = await simulate_room(room_scene, data_context)
+    if result is None:
+        raise HTTPException(status_code=400, detail="Room simulation failed")
+
+
+
+    room = await data_context.rooms.find_one_by_id(HttpObjectId(room_id))
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    room.simulation = result.values
+    await data_context.rooms.save(room)
+
+    return result

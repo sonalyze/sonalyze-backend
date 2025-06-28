@@ -1,4 +1,3 @@
-# socketio.pyi
 from typing import TypeVar, Callable, ParamSpec, Any, Optional
 
 P = ParamSpec("P")

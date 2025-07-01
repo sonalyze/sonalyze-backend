@@ -38,14 +38,14 @@ def register_measurement_events(sio: AsyncServer) -> None:
         speaker_indices = {c.index for c in lobbies[session.lobby].speakers}
 
         if not set(mic_indices) == (set(range(len(mic_indices)))) or not set(speaker_indices) == (set(range(len(speaker_indices)))):
-            await sio.emit("start_measurement_fail", {"reason": "Some indices are not filled."})
+            await sio.emit("start_measurement_fail", {"reason": "Some indices are not filled."}, to=session.lobby)
             return
 
         if len(lobbies[session.lobby].speakers) == 0:
-            await sio.emit("start_measurement_fail", {"reason": "Not enough speakers!"})
+            await sio.emit("start_measurement_fail", {"reason": "Not enough speakers!"}, to=session.lobby)
             return
         elif len(lobbies[session.lobby].microphones) == 0:
-            await sio.emit("start_measurement_fail", {"reason": "Not enough microphones!"})
+            await sio.emit("start_measurement_fail", {"reason": "Not enough microphones!"}, to=session.lobby)
             return
 
         ctx = next(get_db())

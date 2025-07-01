@@ -64,8 +64,12 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
     
     # Temporary
     sweep_signal = create_in(48000)
-
-    results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
+    try:
+        results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
+    except Exception as e:
+        logger.info("Error while analyzing mic data")
+        logger.info(e)
+        return
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results")

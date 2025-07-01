@@ -24,7 +24,7 @@ logger = logging.getLogger("uvicorn.info")
 async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContext) -> None:
     await sio.emit("start_measurement", {}, to=lobby.lobby_id)
     measurement_queues[lobby.lobby_id] = asyncio.Queue()
-    await asyncio.sleep(4)
+    await asyncio.sleep(1)
     data_list: List[List[RecordData]] = []
 
     for i in range(lobby.repetitions):
@@ -64,8 +64,12 @@ async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContex
     
     # Temporary
     sweep_signal = create_in(48000)
-
-    results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
+    try:
+        results = analyze_acoustic_parameters(sweep_signal, recorded_signals_cycles, sample_rate)
+    except Exception as e:
+        logger.info("Error while analyzing mic data")
+        logger.info(e)
+        return
 
     await asyncio.sleep(2)
     logger.info(f"Lobby {lobby.lobby_id} measurement results")

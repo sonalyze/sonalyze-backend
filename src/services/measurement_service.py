@@ -24,7 +24,7 @@ logger = logging.getLogger("uvicorn.info")
 async def measurement_controller(sio: AsyncServer, lobby: Lobby, ctx: DataContext) -> None:
     await sio.emit("start_measurement", {}, to=lobby.lobby_id)
     measurement_queues[lobby.lobby_id] = asyncio.Queue()
-    await asyncio.sleep(4)
+    await asyncio.sleep(1)
     data_list: List[List[RecordData]] = []
 
     for i in range(lobby.repetitions):

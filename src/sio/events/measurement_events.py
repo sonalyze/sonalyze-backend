@@ -18,6 +18,9 @@ def register_measurement_events(sio: AsyncServer) -> None:
         delay: float
         distances: Dict[int, Dict[int, float]]
 
+    class ReceivedStartMeasurementProps(BaseModel):
+    	timestamp: int  # From Date.now() in frontend (milliseconds)
+
     @sio.event # type: ignore
     async def start_measurement(sid: str, data: StartMeasurementProps) -> None:
         try:
@@ -69,3 +72,23 @@ def register_measurement_events(sio: AsyncServer) -> None:
         session = cast(SocketSession, await sio.get_session(sid))
         await measurement_queues[session.lobby].put(RecordData(sid=sid, recording=data.recording))
         logger.info(f"Microphone data from {sid} arrived for lobby {session.lobby}")
+
+    @sio.event  # type: ignore
+    async def received_start_measurement(sid: str, data: ReceivedStartMeasurementProps) -> None:
+    	try:
+    		data = ReceivedStartMeasurementProps.model_validate(data)
+    	except ValidationError as e:
+    		logger.error(e)
+    		return
+
+    	session = cast(SocketSession, await sio.get_session(sid))
+    	receive_time = datetime.utcnow()
+    	client_timestamp = data.timestamp / 1000.0
+
+    	server_timestamp = receive_time.timestamp()
+    	time_diff = server_timestamp - client_timestamp
+
+    	logger.info(
+    		f"[{session.lobby}] Client {sid} received start_measurement at {client_timestamp:.3f}s "
+    		f"(Server time: {server_timestamp:.3f}s, Diff: {time_diff:.3f}s)"
+    	)
